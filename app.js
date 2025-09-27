@@ -20,50 +20,72 @@ class AIComposer {
     
     initializeElements() {
         // Control elements
-        this.keySelect = document.getElementById('key-select');
-        this.tempoSlider = document.getElementById('tempo-slider');
-        this.tempoValue = document.getElementById('tempo-value');
-        this.styleSelect = document.getElementById('style-select');
-        this.lengthSlider = document.getElementById('length-slider');
-        this.lengthValue = document.getElementById('length-value');
-        
-        // Instrument toggles
-        this.pianoToggle = document.getElementById('piano-toggle');
-        this.stringsToggle = document.getElementById('strings-toggle');
-        this.bassToggle = document.getElementById('bass-toggle');
-        this.drumsToggle = document.getElementById('drums-toggle');
+        this.keySelect = document.getElementById('key');
+        this.tempoSlider = document.getElementById('tempo');
+        this.tempoValue = document.getElementById('tempoValue');
+        this.complexitySelect = document.getElementById('complexity');
+        this.structureSelect = document.getElementById('structure');
+        this.genreSelect = document.getElementById('genre');
         
         // Control buttons
-        this.generateBtn = document.getElementById('generate-btn');
-        this.stopBtn = document.getElementById('stop-btn');
-        this.downloadBtn = document.getElementById('download-btn');
-        this.playPauseBtn = document.getElementById('play-pause-btn');
+        this.generateBtn = document.getElementById('generateBtn');
+        this.playBtn = document.getElementById('playBtn');
+        this.stopBtn = document.getElementById('stopBtn');
+        this.exportBtn = document.getElementById('exportBtn');
         
         // Visualization elements
         this.visualizer = document.getElementById('visualizer');
-        this.visualizerCtx = this.visualizer.getContext('2d');
-        this.progressFill = document.querySelector('.progress-fill');
+        this.visualizerCtx = this.visualizer ? this.visualizer.getContext('2d') : null;
+        this.status = document.getElementById('status');
         
-        // Set canvas size
-        this.visualizer.width = 800;
-        this.visualizer.height = 200;
+        // Set canvas size if visualizer exists
+        if (this.visualizer) {
+            this.visualizer.width = 800;
+            this.visualizer.height = 250;
+        }
     }
     
     bindEvents() {
         // Slider updates
-        this.tempoSlider.addEventListener('input', (e) => {
-            this.tempoValue.textContent = e.target.value;
-        });
-        
-        this.lengthSlider.addEventListener('input', (e) => {
-            this.lengthValue.textContent = e.target.value;
-        });
+        if (this.tempoSlider) {
+            this.tempoSlider.addEventListener('input', (e) => {
+                if (this.tempoValue) this.tempoValue.textContent = e.target.value;
+            });
+        }
         
         // Button events
-        this.generateBtn.addEventListener('click', () => this.generateMusic());
-        this.stopBtn.addEventListener('click', () => this.stopMusic());
-        this.downloadBtn.addEventListener('click', () => this.downloadMusic());
-        this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+        if (this.generateBtn) {
+            this.generateBtn.addEventListener('click', () => this.generateMusic());
+        }
+        if (this.playBtn) {
+            this.playBtn.addEventListener('click', () => this.playMusic());
+        }
+        if (this.stopBtn) {
+            this.stopBtn.addEventListener('click', () => this.stopMusic());
+        }
+        if (this.exportBtn) {
+            this.exportBtn.addEventListener('click', () => this.downloadMusic());
+        }
+        
+        // Style blending controls
+        const secondaryGenreSelect = document.getElementById('secondaryGenre');
+        const blendRatioSlider = document.getElementById('blendRatio');
+        const blendRatioValue = document.getElementById('blendRatioValue');
+        
+        if (secondaryGenreSelect && blendRatioSlider && blendRatioValue) {
+            secondaryGenreSelect.addEventListener('change', (e) => {
+                const hasSecondary = e.target.value !== '';
+                blendRatioSlider.disabled = !hasSecondary;
+                if (!hasSecondary) {
+                    blendRatioSlider.value = 30;
+                    blendRatioValue.textContent = '30%';
+                }
+            });
+            
+            blendRatioSlider.addEventListener('input', (e) => {
+                blendRatioValue.textContent = e.target.value + '%';
+            });
+        }
         
         // AI Feature events
         this.bindAIFeatureEvents();
@@ -85,17 +107,19 @@ class AIComposer {
     }
     
     getSettings() {
+        const secondaryGenreSelect = document.getElementById('secondaryGenre');
+        const blendRatioSlider = document.getElementById('blendRatio');
+        
         return {
-            key: this.keySelect.value,
-            tempo: parseInt(this.tempoSlider.value),
-            style: this.styleSelect.value,
-            length: parseInt(this.lengthSlider.value),
-            instruments: {
-                piano: this.pianoToggle.checked,
-                strings: this.stringsToggle.checked,
-                bass: this.bassToggle.checked,
-                drums: this.drumsToggle.checked
-            }
+            key: this.keySelect ? this.keySelect.value : 'C',
+            tempo: this.tempoSlider ? parseInt(this.tempoSlider.value) : 120,
+            complexity: this.complexitySelect ? this.complexitySelect.value : 'moderate',
+            structure: this.structureSelect ? this.structureSelect.value : 'simple',
+            genre: this.genreSelect ? this.genreSelect.value : 'pop',
+            secondaryGenre: secondaryGenreSelect ? secondaryGenreSelect.value : '',
+            blendRatio: blendRatioSlider ? parseInt(blendRatioSlider.value) / 100 : 0.3,
+            length: 30,
+            instruments: { piano: true, strings: true, bass: true, drums: true }
         };
     }
     
@@ -222,7 +246,7 @@ class AIComposer {
         }
     }
     
-    async downloadMusic() {
+    async downloadMusic(format = 'wav') {
         if (!this.currentComposition || !this.isInitialized) {
             this.showError('No music to download. Please generate music first.');
             return;
@@ -235,33 +259,70 @@ class AIComposer {
             this.downloadBtn.disabled = true;
             this.downloadBtn.textContent = 'Preparing...';
             
-            // Export to WAV (simplified implementation)
-            const blob = await this.musicGenerator.exportToWAV(
-                this.currentComposition, 
-                settings.instruments, 
-                settings.length
-            );
-            
-            // Create download link
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `hs-music-ai-${Date.now()}.wav`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            this.showSuccess('Music downloaded successfully!');
+            let exportedData;
+            let filename;
+            let mimeType;
+
+            switch (format) {
+                case 'wav':
+                    exportedData = await this.musicGenerator.exportToWAV(
+                        this.currentComposition, 
+                        settings.instruments, 
+                        settings.length,
+                        24 // 24-bit high quality
+                    );
+                    filename = `hs-music-ai-${Date.now()}.wav`;
+                    mimeType = 'audio/wav';
+                    break;
+                    
+                case 'midi':
+                    exportedData = await this.musicGenerator.exportToMIDI(this.currentComposition);
+                    filename = `hs-music-ai-${Date.now()}.mid`;
+                    mimeType = 'audio/midi';
+                    break;
+                    
+                case 'stems':
+                    const stems = await this.musicGenerator.exportStems(
+                        this.currentComposition, 
+                        settings.instruments, 
+                        settings.length
+                    );
+                    
+                    // Download each stem separately
+                    for (const [instrument, stemData] of Object.entries(stems)) {
+                        this.downloadBlob(stemData, `hs-music-ai-${instrument}-${Date.now()}.wav`, 'audio/wav');
+                    }
+                    
+                    this.showSuccess('Individual stems downloaded successfully!');
+                    return;
+                    
+                default:
+                    throw new Error(`Unsupported export format: ${format}`);
+            }
+
+            this.downloadBlob(exportedData, filename, mimeType);
+            this.showSuccess(`Music downloaded as ${format.toUpperCase()} successfully!`);
             
         } catch (error) {
             console.error('Error downloading music:', error);
-            this.showError('Failed to download music. Please try again.');
+            this.showError(`Failed to download music: ${error.message}`);
         } finally {
             // Reset button state
             this.downloadBtn.disabled = false;
             this.downloadBtn.textContent = 'Download';
         }
+    }
+
+    downloadBlob(blob, filename, mimeType) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
     
     startVisualization() {
@@ -274,50 +335,179 @@ class AIComposer {
             
             // Get audio data
             const dataArray = this.musicGenerator.getAnalyserData();
+            const frequencyData = this.musicGenerator.getFrequencyData();
             
             if (dataArray && this.isPlaying) {
-                // Draw frequency bars
-                const barWidth = this.visualizer.width / dataArray.length;
-                let x = 0;
-                
-                for (let i = 0; i < dataArray.length; i++) {
-                    const barHeight = (dataArray[i] / 255) * this.visualizer.height * 0.8;
-                    
-                    // Create gradient
-                    const gradient = this.visualizerCtx.createLinearGradient(0, this.visualizer.height, 0, this.visualizer.height - barHeight);
-                    gradient.addColorStop(0, '#667eea');
-                    gradient.addColorStop(1, '#764ba2');
-                    
-                    this.visualizerCtx.fillStyle = gradient;
-                    this.visualizerCtx.fillRect(x, this.visualizer.height - barHeight, barWidth - 1, barHeight);
-                    
-                    x += barWidth;
-                }
+                this.drawSpectrumVisualization(dataArray, frequencyData);
             } else {
-                // Draw idle animation
-                const time = Date.now() * 0.002;
-                const centerY = this.visualizer.height / 2;
-                
-                this.visualizerCtx.strokeStyle = '#667eea';
-                this.visualizerCtx.lineWidth = 2;
-                this.visualizerCtx.beginPath();
-                
-                for (let x = 0; x < this.visualizer.width; x += 2) {
-                    const y = centerY + Math.sin((x * 0.01) + time) * 20 + Math.sin((x * 0.02) + time * 1.5) * 10;
-                    if (x === 0) {
-                        this.visualizerCtx.moveTo(x, y);
-                    } else {
-                        this.visualizerCtx.lineTo(x, y);
-                    }
-                }
-                
-                this.visualizerCtx.stroke();
+                this.drawIdleAnimation();
             }
         };
         
         draw();
     }
-    
+
+    drawSpectrumVisualization(dataArray, frequencyData) {
+        const width = this.visualizer.width;
+        const height = this.visualizer.height;
+        
+        // Draw frequency spectrum bars
+        const barWidth = width / dataArray.length;
+        let x = 0;
+        
+        for (let i = 0; i < dataArray.length; i++) {
+            const barHeight = (dataArray[i] / 255) * height * 0.8;
+            
+            // Create dynamic gradient based on frequency content
+            const gradient = this.visualizerCtx.createLinearGradient(0, height, 0, height - barHeight);
+            const intensity = dataArray[i] / 255;
+            
+            if (i < dataArray.length * 0.3) {
+                // Low frequencies - red to orange
+                gradient.addColorStop(0, `rgba(255, 69, 0, ${intensity})`);
+                gradient.addColorStop(1, `rgba(255, 140, 0, ${intensity})`);
+            } else if (i < dataArray.length * 0.7) {
+                // Mid frequencies - blue to purple
+                gradient.addColorStop(0, `rgba(102, 126, 234, ${intensity})`);
+                gradient.addColorStop(1, `rgba(118, 75, 162, ${intensity})`);
+            } else {
+                // High frequencies - cyan to white
+                gradient.addColorStop(0, `rgba(0, 255, 255, ${intensity})`);
+                gradient.addColorStop(1, `rgba(255, 255, 255, ${intensity})`);
+            }
+            
+            this.visualizerCtx.fillStyle = gradient;
+            this.visualizerCtx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
+            
+            // Add glow effect for high intensity bars
+            if (intensity > 0.7) {
+                this.visualizerCtx.shadowColor = gradient;
+                this.visualizerCtx.shadowBlur = 10;
+                this.visualizerCtx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
+                this.visualizerCtx.shadowBlur = 0;
+            }
+            
+            x += barWidth;
+        }
+        
+        // Draw waveform overlay
+        this.drawWaveformOverlay(frequencyData);
+        
+        // Draw frequency analysis
+        this.drawFrequencyAnalysis(dataArray);
+    }
+
+    drawWaveformOverlay(frequencyData) {
+        if (!frequencyData) return;
+        
+        const width = this.visualizer.width;
+        const height = this.visualizer.height;
+        const centerY = height / 2;
+        
+        this.visualizerCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        this.visualizerCtx.lineWidth = 2;
+        this.visualizerCtx.beginPath();
+        
+        const sliceWidth = width / frequencyData.length;
+        let x = 0;
+        
+        for (let i = 0; i < frequencyData.length; i++) {
+            const v = (frequencyData[i] - 128) / 128.0;
+            const y = centerY + v * centerY * 0.5;
+            
+            if (i === 0) {
+                this.visualizerCtx.moveTo(x, y);
+            } else {
+                this.visualizerCtx.lineTo(x, y);
+            }
+            
+            x += sliceWidth;
+        }
+        
+        this.visualizerCtx.stroke();
+    }
+
+    drawFrequencyAnalysis(dataArray) {
+        // Calculate dominant frequencies
+        let bassLevel = 0, midLevel = 0, trebleLevel = 0;
+        const bassRange = Math.floor(dataArray.length * 0.1);
+        const midRange = Math.floor(dataArray.length * 0.5);
+        
+        for (let i = 0; i < bassRange; i++) {
+            bassLevel += dataArray[i];
+        }
+        for (let i = bassRange; i < midRange; i++) {
+            midLevel += dataArray[i];
+        }
+        for (let i = midRange; i < dataArray.length; i++) {
+            trebleLevel += dataArray[i];
+        }
+        
+        bassLevel /= bassRange;
+        midLevel /= (midRange - bassRange);
+        trebleLevel /= (dataArray.length - midRange);
+        
+        // Draw frequency level indicators
+        const width = this.visualizer.width;
+        const height = this.visualizer.height;
+        
+        // Bass indicator (bottom left)
+        this.visualizerCtx.fillStyle = `rgba(255, 69, 0, ${bassLevel / 255})`;
+        this.visualizerCtx.fillRect(10, height - 30, 60, 20);
+        
+        // Mid indicator (bottom center)
+        this.visualizerCtx.fillStyle = `rgba(102, 126, 234, ${midLevel / 255})`;
+        this.visualizerCtx.fillRect(width / 2 - 30, height - 30, 60, 20);
+        
+        // Treble indicator (bottom right)
+        this.visualizerCtx.fillStyle = `rgba(0, 255, 255, ${trebleLevel / 255})`;
+        this.visualizerCtx.fillRect(width - 70, height - 30, 60, 20);
+        
+        // Add labels
+        this.visualizerCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        this.visualizerCtx.font = '12px Arial';
+        this.visualizerCtx.fillText('BASS', 15, height - 35);
+        this.visualizerCtx.fillText('MID', width / 2 - 15, height - 35);
+        this.visualizerCtx.fillText('TREBLE', width - 65, height - 35);
+    }
+
+    drawIdleAnimation() {
+        const time = Date.now() * 0.002;
+        const centerY = this.visualizer.height / 2;
+        const width = this.visualizer.width;
+        
+        // Draw multiple sine waves with different frequencies and phases
+        const waves = [
+            { freq: 0.01, amp: 20, phase: 0, color: 'rgba(102, 126, 234, 0.8)' },
+            { freq: 0.02, amp: 15, phase: Math.PI / 3, color: 'rgba(118, 75, 162, 0.6)' },
+            { freq: 0.015, amp: 25, phase: Math.PI / 2, color: 'rgba(0, 255, 255, 0.4)' }
+        ];
+        
+        waves.forEach(wave => {
+            this.visualizerCtx.strokeStyle = wave.color;
+            this.visualizerCtx.lineWidth = 2;
+            this.visualizerCtx.beginPath();
+            
+            for (let x = 0; x < width; x += 2) {
+                const y = centerY + Math.sin((x * wave.freq) + time + wave.phase) * wave.amp;
+                if (x === 0) {
+                    this.visualizerCtx.moveTo(x, y);
+                } else {
+                    this.visualizerCtx.lineTo(x, y);
+                }
+            }
+            
+            this.visualizerCtx.stroke();
+        });
+        
+        // Add pulsing center dot
+        const pulseRadius = 5 + Math.sin(time * 2) * 3;
+        this.visualizerCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        this.visualizerCtx.beginPath();
+        this.visualizerCtx.arc(width / 2, centerY, pulseRadius, 0, 2 * Math.PI);
+        this.visualizerCtx.fill();
+    }
+
     showSuccess(message) {
         this.showNotification(message, 'success');
     }
@@ -371,7 +561,6 @@ class AIComposer {
             }, 300);
         }, 3000);
     }
-}
 
     initializeAIFeatures() {
         // Setup AI-specific features
@@ -462,7 +651,7 @@ class AIComposer {
     }
     
     async generateAIComposition(settings) {
-        // Enhanced AI composition generation
+        // Enhanced AI composition generation with style blending
         const aiSettings = {
             ...settings,
             complexity: this.getAIComplexity(),
@@ -472,15 +661,30 @@ class AIComposer {
             structure: this.getSelectedStructure()
         };
         
+        // Apply style blending if secondary genre is selected
+        if (settings.secondaryGenre && settings.secondaryGenre !== '') {
+            const blendedStyle = this.musicGenerator.blendGenreStyles(
+                settings.genre, 
+                settings.secondaryGenre, 
+                settings.blendRatio
+            );
+            aiSettings.blendedStyle = blendedStyle;
+        }
+        
         // Use advanced music generation with AI features
         const composition = this.musicGenerator.generateComposition(aiSettings);
         
-        // Apply AI enhancements
+        // Apply AI enhancements and style characteristics
         if (composition) {
             composition.aiEnhanced = true;
             composition.complexity = aiSettings.complexity;
             composition.energy = aiSettings.energy;
             composition.layers = aiSettings.layers;
+            
+            // Apply style-specific characteristics if blended style exists
+            if (aiSettings.blendedStyle) {
+                this.musicGenerator.applyStyleCharacteristics(composition, aiSettings.blendedStyle);
+            }
         }
         
         return composition;

@@ -16,6 +16,22 @@ class MusicGenerator {
         this.delay = null;
         this.chorus = null;
         
+        // Performance optimization: Pre-computed lookup tables
+        this.noteFrequencyCache = new Map();
+        this.chordCache = new Map();
+        this.scaleCache = new Map();
+        
+        // Audio buffer pools for reuse
+        this.audioBufferPool = {
+            piano: [],
+            strings: [],
+            bass: [],
+            drums: []
+        };
+        
+        // Pre-compute common frequencies
+        this.initializeFrequencyCache();
+        
         // Enhanced music theory
         this.advancedTheory = new AdvancedMusicTheory();
         this.harmonicRhythm = new AdvancedHarmonicRhythm();
@@ -41,7 +57,7 @@ class MusicGenerator {
             development: { duration: 24, energy: 0.9, complexity: 'complex', instruments: ['piano', 'strings', 'bass', 'drums'] }
         };
 
-        // Genre-specific templates
+        // Enhanced Genre-specific templates with detailed style characteristics
         this.genreTemplates = {
             pop: {
                 chordProgressions: [
@@ -52,7 +68,28 @@ class MusicGenerator {
                 rhythmPatterns: ['pop', 'dance'],
                 instruments: ['piano', 'bass', 'drums', 'strings'],
                 tempo: [100, 140],
-                energy: 0.8
+                energy: 0.8,
+                dynamics: {
+                    range: [0.6, 0.9],
+                    variation: 0.3,
+                    crescendos: true,
+                    accents: 'moderate'
+                },
+                articulation: {
+                    legato: 0.7,
+                    staccato: 0.3,
+                    attack: 'medium',
+                    sustain: 0.8
+                },
+                effects: {
+                    reverb: 0.3,
+                    delay: 0.2,
+                    chorus: 0.4,
+                    compression: 0.6
+                },
+                harmonicComplexity: 0.6,
+                melodicContour: 'balanced',
+                rhythmicSyncopation: 0.4
             },
             rock: {
                 chordProgressions: [
@@ -63,7 +100,28 @@ class MusicGenerator {
                 rhythmPatterns: ['rock', 'driving'],
                 instruments: ['guitar', 'bass', 'drums'],
                 tempo: [120, 160],
-                energy: 0.9
+                energy: 0.9,
+                dynamics: {
+                    range: [0.7, 1.0],
+                    variation: 0.4,
+                    crescendos: true,
+                    accents: 'strong'
+                },
+                articulation: {
+                    legato: 0.3,
+                    staccato: 0.7,
+                    attack: 'aggressive',
+                    sustain: 0.6
+                },
+                effects: {
+                    reverb: 0.4,
+                    delay: 0.3,
+                    distortion: 0.7,
+                    compression: 0.8
+                },
+                harmonicComplexity: 0.5,
+                melodicContour: 'angular',
+                rhythmicSyncopation: 0.3
             },
             jazz: {
                 chordProgressions: [
@@ -74,7 +132,28 @@ class MusicGenerator {
                 rhythmPatterns: ['swing', 'latin'],
                 instruments: ['piano', 'bass', 'drums'],
                 tempo: [80, 140],
-                energy: 0.7
+                energy: 0.7,
+                dynamics: {
+                    range: [0.4, 0.9],
+                    variation: 0.6,
+                    crescendos: true,
+                    accents: 'subtle'
+                },
+                articulation: {
+                    legato: 0.8,
+                    staccato: 0.2,
+                    attack: 'smooth',
+                    sustain: 0.9
+                },
+                effects: {
+                    reverb: 0.5,
+                    delay: 0.1,
+                    chorus: 0.2,
+                    compression: 0.4
+                },
+                harmonicComplexity: 0.9,
+                melodicContour: 'sophisticated',
+                rhythmicSyncopation: 0.8
             },
             classical: {
                 chordProgressions: [
@@ -85,7 +164,28 @@ class MusicGenerator {
                 rhythmPatterns: ['classical', 'waltz'],
                 instruments: ['piano', 'strings'],
                 tempo: [60, 120],
-                energy: 0.6
+                energy: 0.6,
+                dynamics: {
+                    range: [0.3, 0.9],
+                    variation: 0.7,
+                    crescendos: true,
+                    accents: 'expressive'
+                },
+                articulation: {
+                    legato: 0.9,
+                    staccato: 0.1,
+                    attack: 'gentle',
+                    sustain: 0.95
+                },
+                effects: {
+                    reverb: 0.7,
+                    delay: 0.0,
+                    chorus: 0.1,
+                    compression: 0.2
+                },
+                harmonicComplexity: 0.8,
+                melodicContour: 'flowing',
+                rhythmicSyncopation: 0.1
             },
             electronic: {
                 chordProgressions: [
@@ -96,7 +196,29 @@ class MusicGenerator {
                 rhythmPatterns: ['electronic', 'techno'],
                 instruments: ['synth', 'bass', 'drums'],
                 tempo: [120, 140],
-                energy: 0.9
+                energy: 0.9,
+                dynamics: {
+                    range: [0.6, 1.0],
+                    variation: 0.5,
+                    crescendos: true,
+                    accents: 'mechanical'
+                },
+                articulation: {
+                    legato: 0.4,
+                    staccato: 0.6,
+                    attack: 'sharp',
+                    sustain: 0.7
+                },
+                effects: {
+                    reverb: 0.3,
+                    delay: 0.6,
+                    chorus: 0.5,
+                    compression: 0.9,
+                    filter: 0.8
+                },
+                harmonicComplexity: 0.4,
+                melodicContour: 'repetitive',
+                rhythmicSyncopation: 0.6
             },
             ambient: {
                 chordProgressions: [
@@ -107,7 +229,28 @@ class MusicGenerator {
                 rhythmPatterns: ['ambient', 'floating'],
                 instruments: ['piano', 'strings', 'synth'],
                 tempo: [60, 90],
-                energy: 0.4
+                energy: 0.4,
+                dynamics: {
+                    range: [0.2, 0.7],
+                    variation: 0.8,
+                    crescendos: true,
+                    accents: 'minimal'
+                },
+                articulation: {
+                    legato: 0.95,
+                    staccato: 0.05,
+                    attack: 'soft',
+                    sustain: 0.98
+                },
+                effects: {
+                    reverb: 0.9,
+                    delay: 0.7,
+                    chorus: 0.6,
+                    compression: 0.3
+                },
+                harmonicComplexity: 0.7,
+                melodicContour: 'ethereal',
+                rhythmicSyncopation: 0.2
             },
             cinematic: {
                 chordProgressions: [
@@ -118,11 +261,197 @@ class MusicGenerator {
                 rhythmPatterns: ['cinematic', 'epic'],
                 instruments: ['strings', 'piano', 'brass'],
                 tempo: [70, 110],
-                energy: 0.8
+                energy: 0.8,
+                dynamics: {
+                    range: [0.3, 1.0],
+                    variation: 0.9,
+                    crescendos: true,
+                    accents: 'dramatic'
+                },
+                articulation: {
+                    legato: 0.8,
+                    staccato: 0.2,
+                    attack: 'powerful',
+                    sustain: 0.9
+                },
+                effects: {
+                    reverb: 0.8,
+                    delay: 0.4,
+                    chorus: 0.3,
+                    compression: 0.5
+                },
+                harmonicComplexity: 0.8,
+                melodicContour: 'epic',
+                rhythmicSyncopation: 0.3
             }
         };
         
-        this.initializeWavetables();
+        // Initialize wavetables after audio context is created
+        this.wavetables = null;
+    }
+    
+    initializeFrequencyCache() {
+        // Pre-compute note frequencies for common range (C0 to C8)
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        for (let octave = 0; octave <= 8; octave++) {
+            for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
+                const note = notes[noteIndex];
+                const frequency = 440 * Math.pow(2, (octave * 12 + noteIndex - 57) / 12);
+                this.noteFrequencyCache.set(`${note}${octave}`, frequency);
+            }
+        }
+    }
+
+    // Style Transfer Engine - Blend characteristics between genres
+    blendGenreStyles(primaryGenre, secondaryGenre, blendRatio = 0.5) {
+        const primary = this.genreTemplates[primaryGenre];
+        const secondary = this.genreTemplates[secondaryGenre];
+        
+        if (!primary || !secondary) {
+            console.warn('Invalid genre for blending:', primaryGenre, secondaryGenre);
+            return primary || secondary || this.genreTemplates.pop;
+        }
+        
+        return {
+            chordProgressions: [
+                ...primary.chordProgressions,
+                ...secondary.chordProgressions.slice(0, Math.ceil(secondary.chordProgressions.length * blendRatio))
+            ],
+            rhythmPatterns: [
+                ...primary.rhythmPatterns,
+                ...secondary.rhythmPatterns.slice(0, Math.ceil(secondary.rhythmPatterns.length * blendRatio))
+            ],
+            instruments: this.blendArrays(primary.instruments, secondary.instruments, blendRatio),
+            tempo: [
+                Math.round(primary.tempo[0] * (1 - blendRatio) + secondary.tempo[0] * blendRatio),
+                Math.round(primary.tempo[1] * (1 - blendRatio) + secondary.tempo[1] * blendRatio)
+            ],
+            energy: primary.energy * (1 - blendRatio) + secondary.energy * blendRatio,
+            dynamics: this.blendDynamics(primary.dynamics, secondary.dynamics, blendRatio),
+            articulation: this.blendArticulation(primary.articulation, secondary.articulation, blendRatio),
+            effects: this.blendEffects(primary.effects, secondary.effects, blendRatio),
+            harmonicComplexity: primary.harmonicComplexity * (1 - blendRatio) + secondary.harmonicComplexity * blendRatio,
+            melodicContour: blendRatio < 0.5 ? primary.melodicContour : secondary.melodicContour,
+            rhythmicSyncopation: primary.rhythmicSyncopation * (1 - blendRatio) + secondary.rhythmicSyncopation * blendRatio
+        };
+    }
+    
+    blendArrays(arr1, arr2, ratio) {
+        const combined = [...new Set([...arr1, ...arr2])];
+        const primaryCount = Math.ceil(arr1.length * (1 - ratio));
+        const secondaryCount = Math.ceil(arr2.length * ratio);
+        
+        return [
+            ...arr1.slice(0, primaryCount),
+            ...arr2.slice(0, secondaryCount)
+        ].slice(0, Math.max(arr1.length, arr2.length));
+    }
+    
+    blendDynamics(dyn1, dyn2, ratio) {
+        return {
+            range: [
+                dyn1.range[0] * (1 - ratio) + dyn2.range[0] * ratio,
+                dyn1.range[1] * (1 - ratio) + dyn2.range[1] * ratio
+            ],
+            variation: dyn1.variation * (1 - ratio) + dyn2.variation * ratio,
+            crescendos: ratio < 0.5 ? dyn1.crescendos : dyn2.crescendos,
+            accents: ratio < 0.5 ? dyn1.accents : dyn2.accents
+        };
+    }
+    
+    blendArticulation(art1, art2, ratio) {
+        return {
+            legato: art1.legato * (1 - ratio) + art2.legato * ratio,
+            staccato: art1.staccato * (1 - ratio) + art2.staccato * ratio,
+            attack: ratio < 0.5 ? art1.attack : art2.attack,
+            sustain: art1.sustain * (1 - ratio) + art2.sustain * ratio
+        };
+    }
+    
+    blendEffects(eff1, eff2, ratio) {
+        const blended = {};
+        const allKeys = new Set([...Object.keys(eff1), ...Object.keys(eff2)]);
+        
+        for (const key of allKeys) {
+            const val1 = eff1[key] || 0;
+            const val2 = eff2[key] || 0;
+            blended[key] = val1 * (1 - ratio) + val2 * ratio;
+        }
+        
+        return blended;
+    }
+    
+    // Apply style characteristics to generated music
+    applyStyleCharacteristics(composition, genreTemplate) {
+        if (!genreTemplate || !composition) return composition;
+        
+        // Apply dynamics
+        this.applyDynamicRange(composition, genreTemplate.dynamics);
+        
+        // Apply articulation
+        this.applyArticulationStyle(composition, genreTemplate.articulation);
+        
+        // Apply rhythmic syncopation
+        this.applyRhythmicSyncopation(composition, genreTemplate.rhythmicSyncopation);
+        
+        return composition;
+    }
+    
+    applyDynamicRange(composition, dynamics) {
+        if (!dynamics || !composition.notes) return;
+        
+        composition.notes.forEach((note, index) => {
+            const baseVelocity = note.velocity || 0.7;
+            const dynamicRange = dynamics.range[1] - dynamics.range[0];
+            const variation = (Math.random() - 0.5) * dynamics.variation;
+            
+            note.velocity = Math.max(0.1, Math.min(1.0, 
+                dynamics.range[0] + (baseVelocity * dynamicRange) + variation
+            ));
+        });
+    }
+    
+    applyArticulationStyle(composition, articulation) {
+        if (!articulation || !composition.notes) return;
+        
+        composition.notes.forEach(note => {
+            const isLegato = Math.random() < articulation.legato;
+            
+            if (isLegato) {
+                note.duration *= articulation.sustain;
+            } else {
+                note.duration *= (1 - articulation.staccato);
+            }
+            
+            // Adjust attack based on style
+            note.attack = this.getAttackTime(articulation.attack);
+        });
+    }
+    
+    getAttackTime(attackStyle) {
+        const attackTimes = {
+            'soft': 0.1,
+            'gentle': 0.05,
+            'medium': 0.02,
+            'sharp': 0.01,
+            'aggressive': 0.005,
+            'powerful': 0.03,
+            'smooth': 0.08
+        };
+        
+        return attackTimes[attackStyle] || 0.02;
+    }
+    
+    applyRhythmicSyncopation(composition, syncopationLevel) {
+        if (!composition.notes || syncopationLevel <= 0) return;
+        
+        composition.notes.forEach((note, index) => {
+            if (Math.random() < syncopationLevel) {
+                // Slightly offset timing for syncopation
+                const offset = (Math.random() - 0.5) * 0.1;
+                note.startTime += offset;
+            }
+        });
     }
 
     async initialize() {
@@ -139,6 +468,9 @@ class MusicGenerator {
             
             // Initialize data array for analyser
             this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            
+            // Initialize wavetables after audio context is created
+            this.initializeWavetables();
             
             // Connect effects chain to analyser and destination
             this.effectsChain.output.connect(this.analyser);
@@ -947,14 +1279,239 @@ class MusicGenerator {
     }
 
     createAdvancedDrums(type, startTime, velocity = 0.7) {
-        switch (type) {
-            case 'kick':
-                return this.createAdvancedKick(startTime, velocity);
-            case 'snare':
-                return this.createAdvancedSnare(startTime, velocity);
-            default:
-                return this.createAdvancedKick(startTime, velocity);
+        // Enhanced multi-layered drum synthesis with realistic samples
+        const drumKits = {
+            acoustic: {
+                kick: { 
+                    layers: [
+                        { freq: 60, gain: 1.0, decay: 0.8, wave: 'sine' },
+                        { freq: 120, gain: 0.3, decay: 0.3, wave: 'triangle' },
+                        { freq: 2000, gain: 0.1, decay: 0.05, wave: 'square' }
+                    ]
+                },
+                snare: { 
+                    layers: [
+                        { freq: 200, gain: 0.7, decay: 0.3, wave: 'triangle' },
+                        { freq: 400, gain: 0.4, decay: 0.2, wave: 'sawtooth' },
+                        { freq: 8000, gain: 0.6, decay: 0.1, noise: true }
+                    ]
+                },
+                hihat: { 
+                    layers: [
+                        { freq: 8000, gain: 0.8, decay: 0.08, noise: true },
+                        { freq: 12000, gain: 0.6, decay: 0.06, noise: true },
+                        { freq: 16000, gain: 0.4, decay: 0.04, noise: true }
+                    ]
+                }
+            },
+            electronic: {
+                kick: {
+                    layers: [
+                        { freq: 50, gain: 1.2, decay: 0.6, wave: 'sine' },
+                        { freq: 100, gain: 0.4, decay: 0.2, wave: 'triangle' },
+                        { freq: 1000, gain: 0.2, decay: 0.05, wave: 'square' }
+                    ]
+                },
+                snare: {
+                    layers: [
+                        { freq: 250, gain: 0.8, decay: 0.25, wave: 'triangle' },
+                        { freq: 500, gain: 0.5, decay: 0.15, wave: 'sawtooth' },
+                        { freq: 10000, gain: 0.7, decay: 0.1, noise: true }
+                    ]
+                }
+            }
+        };
+
+        const kitType = this.currentDrumKit || 'acoustic';
+        const kit = drumKits[kitType] || drumKits.acoustic;
+        const drum = kit[type];
+
+        if (!drum) {
+            // Fallback to existing implementation for unsupported types
+            switch (type) {
+                case 'kick':
+                    return this.createAdvancedKick(startTime, velocity);
+                case 'snare':
+                    return this.createAdvancedSnare(startTime, velocity);
+                default:
+                    return this.createAdvancedKick(startTime, velocity);
+            }
         }
+
+        // Create multi-layered drum sound
+        const layers = [];
+        const masterGain = this.audioContext.createGain();
+        const compressor = this.audioContext.createDynamicsCompressor();
+
+        // Configure compression for punch
+        compressor.threshold.setValueAtTime(-20, startTime);
+        compressor.knee.setValueAtTime(5, startTime);
+        compressor.ratio.setValueAtTime(4, startTime);
+        compressor.attack.setValueAtTime(0.001, startTime);
+        compressor.release.setValueAtTime(0.1, startTime);
+
+        drum.layers.forEach((layer, index) => {
+            const layerGain = this.audioContext.createGain();
+            const filter = this.audioContext.createBiquadFilter();
+
+            if (layer.noise) {
+                // Create filtered noise for textural elements
+                const noiseBuffer = this.createFilteredNoise(layer.decay, 'highpass', layer.freq * 0.5, 2);
+                const noiseSource = this.audioContext.createBufferSource();
+                noiseSource.buffer = noiseBuffer;
+
+                noiseSource.connect(filter);
+                filter.connect(layerGain);
+                
+                noiseSource.start(startTime);
+                noiseSource.stop(startTime + layer.decay);
+            } else {
+                // Create tonal component
+                const oscillator = this.audioContext.createOscillator();
+                oscillator.type = layer.wave || 'sine';
+                
+                // Frequency envelope for punch and character
+                oscillator.frequency.setValueAtTime(layer.freq, startTime);
+                oscillator.frequency.exponentialRampToValueAtTime(
+                    layer.freq * 0.3, 
+                    startTime + layer.decay * 0.1
+                );
+                oscillator.frequency.exponentialRampToValueAtTime(
+                    layer.freq * 0.1, 
+                    startTime + layer.decay
+                );
+
+                // Low-pass filter for warmth
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(layer.freq * 8, startTime);
+                filter.frequency.exponentialRampToValueAtTime(
+                    layer.freq * 2, 
+                    startTime + layer.decay
+                );
+                filter.Q.setValueAtTime(1.5, startTime);
+
+                oscillator.connect(filter);
+                filter.connect(layerGain);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + layer.decay);
+            }
+
+            // Gain envelope with realistic attack and decay
+            layerGain.gain.setValueAtTime(0, startTime);
+            layerGain.gain.linearRampToValueAtTime(
+                layer.gain * velocity, 
+                startTime + 0.002
+            );
+            layerGain.gain.exponentialRampToValueAtTime(
+                layer.gain * velocity * 0.3, 
+                startTime + layer.decay * 0.3
+            );
+            layerGain.gain.exponentialRampToValueAtTime(
+                0.001, 
+                startTime + layer.decay
+            );
+
+            layerGain.connect(compressor);
+            layers.push(layerGain);
+        });
+
+        // Master gain and effects
+        masterGain.gain.setValueAtTime(velocity, startTime);
+        compressor.connect(masterGain);
+        masterGain.connect(this.effectsChain.input);
+
+        return { layers, masterGain, compressor };
+    }
+
+    // Drum pattern generation with groove and humanization
+    generateDrumPattern(genre, measures = 4, complexity = 0.5) {
+        const patterns = {
+            pop: {
+                kick: [0, 2],
+                snare: [1, 3],
+                hihat: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5]
+            },
+            rock: {
+                kick: [0, 2.5],
+                snare: [1, 3],
+                hihat: [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75],
+                crash: [0]
+            },
+            jazz: {
+                kick: [0, 2.33],
+                snare: [1.33, 3.67],
+                ride: [0, 0.33, 0.67, 1, 1.33, 1.67, 2, 2.33, 2.67, 3, 3.33, 3.67],
+                hihat: [1, 3]
+            },
+            electronic: {
+                kick: [0, 1, 2, 3],
+                snare: [1, 3],
+                hihat: [0.5, 1.5, 2.5, 3.5],
+                crash: [0, 4, 8, 12]
+            },
+            funk: {
+                kick: [0, 0.75, 2.25],
+                snare: [1, 3.25],
+                hihat: [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75]
+            }
+        };
+
+        const pattern = patterns[genre] || patterns.pop;
+        const drumPattern = [];
+
+        for (let measure = 0; measure < measures; measure++) {
+            Object.keys(pattern).forEach(drumType => {
+                pattern[drumType].forEach(beat => {
+                    const timing = measure * 4 + beat;
+                    const velocity = 0.7 + Math.random() * 0.3;
+                    const humanization = (Math.random() - 0.5) * 0.02; // Slight timing variation
+                    
+                    drumPattern.push({
+                        type: drumType,
+                        time: timing + humanization,
+                        velocity: velocity,
+                        variation: complexity
+                    });
+                });
+            });
+        }
+
+        // Add complexity-based fills and variations
+        if (complexity > 0.6) {
+            this.addDrumFills(drumPattern, measures, complexity);
+        }
+
+        return drumPattern.sort((a, b) => a.time - b.time);
+    }
+
+    addDrumFills(pattern, measures, complexity) {
+        // Add drum fills at the end of phrases
+        for (let measure = 0; measure < measures; measure++) {
+            if ((measure + 1) % 4 === 0 || Math.random() < complexity * 0.3) {
+                const fillStart = measure * 4 + 3.5;
+                const fillDensity = Math.floor(complexity * 8);
+                
+                for (let i = 0; i < fillDensity; i++) {
+                    const fillTime = fillStart + (i * 0.125);
+                    const drumTypes = ['snare', 'kick', 'hihat'];
+                    const drumType = drumTypes[Math.floor(Math.random() * drumTypes.length)];
+                    
+                    pattern.push({
+                        type: drumType,
+                        time: fillTime,
+                        velocity: 0.6 + Math.random() * 0.4,
+                        variation: complexity
+                    });
+                }
+            }
+        }
+    }
+
+    // Set drum kit type
+    setDrumKit(kitType) {
+        this.currentDrumKit = kitType;
+        console.log(`Switched to ${kitType} drum kit`);
     }
 
     createAdvancedKick(startTime, velocity) {
@@ -1180,18 +1737,46 @@ class MusicGenerator {
     }
     
     getChordNotes(chord, key) {
+        // Use cached chord notes if available for better performance
+        const cacheKey = `${chord}_${key}`;
+        if (this.chordCache.has(cacheKey)) {
+            return this.chordCache.get(cacheKey);
+        }
+        
+        // Calculate chord notes
         const keyValue = this.getNoteValue(key);
         const scale = this.scales.major;
         const root = (keyValue + scale[(chord.degree - 1) % scale.length]) % 12;
         
-        return [root, (root + 4) % 12, (root + 7) % 12];
+        const chordNotes = [root, (root + 4) % 12, (root + 7) % 12];
+        
+        // Cache the result for future use
+        this.chordCache.set(cacheKey, chordNotes);
+        
+        return chordNotes;
     }
     
     noteToFrequency(note, octave) {
+        // Use cached frequency if available for better performance
+        if (typeof note === 'string' && typeof octave === 'number') {
+            const cacheKey = `${note}${octave}`;
+            if (this.noteFrequencyCache.has(cacheKey)) {
+                return this.noteFrequencyCache.get(cacheKey);
+            }
+        }
+        
+        // Fallback to calculation if not in cache
         const A4 = 440;
         const noteValue = typeof note === 'number' ? note : this.getNoteValue(note);
         const semitones = (octave - 4) * 12 + noteValue - 9; // A4 is reference
-        return A4 * Math.pow(2, semitones / 12);
+        const frequency = A4 * Math.pow(2, semitones / 12);
+        
+        // Cache the result for future use
+        if (typeof note === 'string' && typeof octave === 'number') {
+            this.noteFrequencyCache.set(`${note}${octave}`, frequency);
+        }
+        
+        return frequency;
     }
     
     stop() {
@@ -1215,24 +1800,404 @@ class MusicGenerator {
         }
         return new Uint8Array(1024);
     }
+
+    getFrequencyData() {
+        if (this.analyser && this.dataArray) {
+            const timeDataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            this.analyser.getByteTimeDomainData(timeDataArray);
+            return timeDataArray;
+        }
+        return new Uint8Array(1024);
+    }
     
-    async exportToWAV(composition, instruments, duration) {
-        // Create offline context for rendering
-        const offlineContext = new OfflineAudioContext(2, duration * 44100, 44100);
+    async exportToWAV(composition, instruments, duration, bitDepth = 24) {
+        // Enhanced export with high-quality 24-bit support
+        const sampleRate = this.audioContext.sampleRate;
+        const length = sampleRate * duration;
+        const numberOfChannels = 2; // Stereo
         
-        // Render composition to buffer
-        // This is a simplified version - full implementation would recreate all audio nodes
-        const buffer = await offlineContext.startRendering();
+        // Create offline context for high-quality rendering
+        const offlineContext = new OfflineAudioContext(numberOfChannels, length, sampleRate);
         
-        // Convert to WAV format
-        const wavData = this.bufferToWave(buffer, buffer.length);
+        // Recreate the composition in offline context
+        await this.renderCompositionOffline(offlineContext, composition, instruments, duration);
+        
+        // Render the audio
+        const renderedBuffer = await offlineContext.startRendering();
+        
+        // Convert to WAV format with specified bit depth
+        const wavData = this.bufferToWave(renderedBuffer, renderedBuffer.length, bitDepth);
         
         return new Blob([wavData], { type: 'audio/wav' });
     }
+
+    async exportToMIDI(composition) {
+        // MIDI export functionality
+        const midiData = {
+            header: {
+                format: 1, // Multi-track
+                tracks: 1,
+                ticksPerQuarter: 480
+            },
+            tracks: []
+        };
+
+        // Convert composition to MIDI events
+        const track = {
+            name: 'AI Generated Composition',
+            events: []
+        };
+
+        // Add tempo event
+        track.events.push({
+            type: 'setTempo',
+            time: 0,
+            microsecondsPerQuarter: 60000000 / (composition.tempo || 120)
+        });
+
+        // Add key signature
+        track.events.push({
+            type: 'keySignature',
+            time: 0,
+            key: composition.key || 'C',
+            scale: 0 // Major
+        });
+
+        // Convert chords to MIDI notes
+        if (composition.chords) {
+            composition.chords.forEach((chord, index) => {
+                const startTime = index * 480; // Quarter note = 480 ticks
+                const duration = 480;
+                
+                chord.notes.forEach((note, noteIndex) => {
+                    const midiNote = this.noteToMIDI(note);
+                    
+                    // Note on
+                    track.events.push({
+                        type: 'noteOn',
+                        time: startTime,
+                        channel: 0,
+                        note: midiNote,
+                        velocity: 80
+                    });
+                    
+                    // Note off
+                    track.events.push({
+                        type: 'noteOff',
+                        time: startTime + duration,
+                        channel: 0,
+                        note: midiNote,
+                        velocity: 0
+                    });
+                });
+            });
+        }
+
+        // Add melody if present
+        if (composition.melody) {
+            composition.melody.forEach(note => {
+                const midiNote = this.noteToMIDI(note.note);
+                const startTime = note.beat * 480;
+                const duration = note.duration * 480;
+                
+                track.events.push({
+                    type: 'noteOn',
+                    time: startTime,
+                    channel: 1,
+                    note: midiNote,
+                    velocity: note.velocity || 80
+                });
+                
+                track.events.push({
+                    type: 'noteOff',
+                    time: startTime + duration,
+                    channel: 1,
+                    note: midiNote,
+                    velocity: 0
+                });
+            });
+        }
+
+        // Sort events by time
+        track.events.sort((a, b) => a.time - b.time);
+        midiData.tracks.push(track);
+
+        return this.encodeMIDI(midiData);
+    }
+
+    async exportStems(composition, instruments, duration) {
+        // Export individual instrument stems
+        const stems = {};
+        const sampleRate = this.audioContext.sampleRate;
+        const length = sampleRate * duration;
+        
+        for (const instrument of instruments) {
+            const offlineContext = new OfflineAudioContext(2, length, sampleRate);
+            
+            // Render only this instrument
+            await this.renderInstrumentStem(offlineContext, composition, instrument, duration);
+            
+            const renderedBuffer = await offlineContext.startRendering();
+            const wavData = this.bufferToWave(renderedBuffer, renderedBuffer.length, 24);
+            stems[instrument] = new Blob([wavData], { type: 'audio/wav' });
+        }
+        
+        return stems;
+    }
+
+    async renderCompositionOffline(offlineContext, composition, instruments, duration) {
+        // Recreate effects chain in offline context
+        const offlineEffects = await this.createOfflineEffectsChain(offlineContext);
+        
+        // Render each instrument
+        for (const instrument of instruments) {
+            await this.renderInstrumentOffline(offlineContext, composition, instrument, offlineEffects);
+        }
+        
+        // Connect to destination
+        offlineEffects.output.connect(offlineContext.destination);
+    }
+
+    async renderInstrumentStem(offlineContext, composition, instrument, duration) {
+        const offlineEffects = await this.createOfflineEffectsChain(offlineContext);
+        await this.renderInstrumentOffline(offlineContext, composition, instrument, offlineEffects);
+        offlineEffects.output.connect(offlineContext.destination);
+    }
+
+    async renderInstrumentOffline(offlineContext, composition, instrument, effectsChain) {
+        // Render instrument parts based on composition
+        if (composition.chords) {
+            composition.chords.forEach((chord, index) => {
+                const startTime = index * 2; // 2 seconds per chord
+                chord.notes.forEach(note => {
+                    const frequency = this.noteToFrequency(note, 4);
+                    this.createOfflineInstrumentNote(
+                        offlineContext, 
+                        instrument, 
+                        frequency, 
+                        startTime, 
+                        1.8, 
+                        0.7, 
+                        effectsChain
+                    );
+                });
+            });
+        }
+
+        if (composition.melody && instrument === 'lead') {
+            composition.melody.forEach(note => {
+                const startTime = note.beat * (60 / (composition.tempo || 120));
+                this.createOfflineInstrumentNote(
+                    offlineContext,
+                    'piano',
+                    note.frequency,
+                    startTime,
+                    note.duration,
+                    note.velocity / 127,
+                    effectsChain
+                );
+            });
+        }
+    }
+
+    createOfflineInstrumentNote(context, instrument, frequency, startTime, duration, velocity, effectsChain) {
+        // Create instrument note in offline context
+        switch (instrument) {
+            case 'piano':
+                this.createOfflinePiano(context, frequency, startTime, duration, velocity, effectsChain);
+                break;
+            case 'strings':
+                this.createOfflineStrings(context, frequency, startTime, duration, velocity, effectsChain);
+                break;
+            case 'bass':
+                this.createOfflineBass(context, frequency, startTime, duration, velocity, effectsChain);
+                break;
+            default:
+                this.createOfflinePiano(context, frequency, startTime, duration, velocity, effectsChain);
+        }
+    }
+
+    createOfflinePiano(context, frequency, startTime, duration, velocity, effectsChain) {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        
+        oscillator.frequency.setValueAtTime(frequency, startTime);
+        oscillator.type = 'triangle';
+        
+        // Piano envelope
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(velocity, startTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(velocity * 0.3, startTime + duration * 0.3);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(effectsChain.input);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+    }
+
+    createOfflineStrings(context, frequency, startTime, duration, velocity, effectsChain) {
+        // Create multiple oscillators for rich string sound
+        const masterGain = context.createGain();
+        
+        // Fundamental
+        const fundamental = context.createOscillator();
+        fundamental.frequency.setValueAtTime(frequency, startTime);
+        fundamental.type = 'sawtooth';
+        
+        // Octave
+        const octave = context.createOscillator();
+        octave.frequency.setValueAtTime(frequency * 2, startTime);
+        octave.type = 'sawtooth';
+        
+        // Fifth
+        const fifth = context.createOscillator();
+        fifth.frequency.setValueAtTime(frequency * 1.5, startTime);
+        fifth.type = 'triangle';
+        
+        const fundamentalGain = context.createGain();
+        const octaveGain = context.createGain();
+        const fifthGain = context.createGain();
+        
+        fundamentalGain.gain.setValueAtTime(velocity * 0.8, startTime);
+        octaveGain.gain.setValueAtTime(velocity * 0.3, startTime);
+        fifthGain.gain.setValueAtTime(velocity * 0.2, startTime);
+        
+        // String envelope (slow attack, sustained)
+        masterGain.gain.setValueAtTime(0, startTime);
+        masterGain.gain.linearRampToValueAtTime(velocity, startTime + 0.3);
+        masterGain.gain.setValueAtTime(velocity * 0.8, startTime + duration * 0.8);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        
+        fundamental.connect(fundamentalGain);
+        octave.connect(octaveGain);
+        fifth.connect(fifthGain);
+        
+        fundamentalGain.connect(masterGain);
+        octaveGain.connect(masterGain);
+        fifthGain.connect(masterGain);
+        
+        masterGain.connect(effectsChain.input);
+        
+        [fundamental, octave, fifth].forEach(osc => {
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        });
+    }
+
+    createOfflineBass(context, frequency, startTime, duration, velocity, effectsChain) {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        const filter = context.createBiquadFilter();
+        
+        oscillator.frequency.setValueAtTime(frequency, startTime);
+        oscillator.type = 'sawtooth';
+        
+        // Low-pass filter for bass warmth
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, startTime);
+        filter.Q.setValueAtTime(2, startTime);
+        
+        // Bass envelope (punchy attack, sustained)
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(velocity, startTime + 0.02);
+        gainNode.gain.setValueAtTime(velocity * 0.7, startTime + duration * 0.5);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        
+        oscillator.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(effectsChain.input);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+    }
+
+    async createOfflineEffectsChain(context) {
+        // Create effects chain for offline rendering
+        const input = context.createGain();
+        const reverb = context.createConvolver();
+        const delay = context.createDelay(1.0);
+        const delayGain = context.createGain();
+        const delayFeedback = context.createGain();
+        const output = context.createGain();
+        
+        // Create impulse response for reverb
+        const impulseBuffer = this.createOfflineImpulseResponse(context, 2, 2, false);
+        reverb.buffer = impulseBuffer;
+        
+        // Configure delay
+        delay.delayTime.setValueAtTime(0.3, 0);
+        delayGain.gain.setValueAtTime(0.2, 0);
+        delayFeedback.gain.setValueAtTime(0.3, 0);
+        
+        // Connect effects chain
+        input.connect(output); // Dry signal
+        input.connect(reverb);
+        reverb.connect(output);
+        input.connect(delay);
+        delay.connect(delayGain);
+        delayGain.connect(output);
+        delay.connect(delayFeedback);
+        delayFeedback.connect(delay);
+        
+        return { input, output };
+    }
+
+    createOfflineImpulseResponse(context, duration, decay, reverse) {
+        const sampleRate = context.sampleRate;
+        const length = sampleRate * duration;
+        const impulse = context.createBuffer(2, length, sampleRate);
+        
+        for (let channel = 0; channel < 2; channel++) {
+            const channelData = impulse.getChannelData(channel);
+            for (let i = 0; i < length; i++) {
+                const n = reverse ? length - i : i;
+                channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+            }
+        }
+        
+        return impulse;
+    }
+
+    noteToMIDI(note) {
+        // Convert note name to MIDI number
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+            'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8,
+            'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+        };
+        
+        if (typeof note === 'string') {
+            const noteName = note.slice(0, -1);
+            const octave = parseInt(note.slice(-1));
+            return noteMap[noteName] + (octave + 1) * 12;
+        }
+        
+        return 60; // Default to middle C
+    }
+
+    encodeMIDI(midiData) {
+        // Simple MIDI encoding (basic implementation)
+        // In a full implementation, you'd use a proper MIDI library
+        const header = new Uint8Array([
+            0x4D, 0x54, 0x68, 0x64, // "MThd"
+            0x00, 0x00, 0x00, 0x06, // Header length
+            0x00, midiData.header.format, // Format
+            0x00, midiData.header.tracks, // Number of tracks
+            (midiData.header.ticksPerQuarter >> 8) & 0xFF,
+            midiData.header.ticksPerQuarter & 0xFF
+        ]);
+        
+        // This is a simplified implementation
+        // A complete MIDI encoder would properly encode all events
+        return new Blob([header], { type: 'audio/midi' });
+    }
     
-    bufferToWave(abuffer, len) {
+    bufferToWave(abuffer, len, bitDepth = 16) {
         const numOfChan = abuffer.numberOfChannels;
-        const length = len * numOfChan * 2 + 44;
+        const bytesPerSample = bitDepth / 8;
+        const length = len * numOfChan * bytesPerSample + 44;
         const buffer = new ArrayBuffer(length);
         const view = new DataView(buffer);
         const channels = [];
@@ -1260,9 +2225,9 @@ class MusicGenerator {
         setUint16(1); // PCM (uncompressed)
         setUint16(numOfChan);
         setUint32(abuffer.sampleRate);
-        setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-        setUint16(numOfChan * 2); // block-align
-        setUint16(16); // 16-bit (hardcoded in this demo)
+        setUint32(abuffer.sampleRate * bytesPerSample * numOfChan); // avg. bytes/sec
+        setUint16(numOfChan * bytesPerSample); // block-align
+        setUint16(bitDepth); // bit depth
         
         setUint32(0x61746164); // "data" - chunk
         setUint32(length - pos - 4); // chunk length
@@ -1275,14 +2240,27 @@ class MusicGenerator {
         while (pos < length) {
             for (let i = 0; i < numOfChan; i++) {
                 sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
-                sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; // scale to 16-bit signed int
-                view.setInt16(pos, sample, true); // write 16-bit sample
-                pos += 2;
+                
+                if (bitDepth === 16) {
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF; // convert to 16-bit PCM
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                } else if (bitDepth === 24) {
+                    sample = sample < 0 ? sample * 0x800000 : sample * 0x7FFFFF; // convert to 24-bit PCM
+                    const intSample = Math.floor(sample);
+                    view.setUint8(pos, intSample & 0xFF);
+                    view.setUint8(pos + 1, (intSample >> 8) & 0xFF);
+                    view.setUint8(pos + 2, (intSample >> 16) & 0xFF);
+                    pos += 3;
+                } else if (bitDepth === 32) {
+                    view.setFloat32(pos, sample, true); // 32-bit float
+                    pos += 4;
+                }
             }
-            offset++; // next source sample
+            offset++; // next sample
         }
         
-        return buffer;
+        return new Uint8Array(buffer);
     }
 }
 

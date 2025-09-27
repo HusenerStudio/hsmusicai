@@ -67,7 +67,7 @@
                             <option value="instrumental">Instrumental</option>
                         </select>
                         
-                        <label for="genre">Genre Style:</label>
+                        <label for="genre">Primary Genre:</label>
                         <select id="genre">
                             <option value="pop">Pop</option>
                             <option value="rock">Rock</option>
@@ -77,6 +77,24 @@
                             <option value="ambient">Ambient</option>
                             <option value="cinematic">Cinematic</option>
                         </select>
+                        
+                        <div class="style-blend-section">
+                            <label for="secondaryGenre">Secondary Genre (Style Blend):</label>
+                            <select id="secondaryGenre">
+                                <option value="">None</option>
+                                <option value="pop">Pop</option>
+                                <option value="rock">Rock</option>
+                                <option value="jazz">Jazz</option>
+                                <option value="classical">Classical</option>
+                                <option value="electronic">Electronic</option>
+                                <option value="ambient">Ambient</option>
+                                <option value="cinematic">Cinematic</option>
+                            </select>
+                            
+                            <label for="blendRatio">Blend Ratio:</label>
+                            <input type="range" id="blendRatio" min="0" max="100" value="30" disabled>
+                            <span id="blendRatioValue">30%</span>
+                        </div>
                         
                         <label for="energy">Energy Level:</label>
                         <input type="range" id="energy" min="1" max="10" value="5">
@@ -131,7 +149,15 @@
                     <button id="generateBtn" class="primary">🎼 Generate Composition</button>
                     <button id="playBtn" class="secondary">▶️ Play</button>
                     <button id="stopBtn" class="danger">⏹️ Stop</button>
-                    <button id="exportBtn" class="secondary">💾 Export WAV</button>
+                    
+                    <div class="export-dropdown">
+                        <button id="exportBtn" class="secondary">💾 Export</button>
+                        <div class="export-options">
+                            <button onclick="app.downloadMusic('wav')" class="export-option">📄 24-bit WAV</button>
+                            <button onclick="app.downloadMusic('midi')" class="export-option">🎹 MIDI File</button>
+                            <button onclick="app.downloadMusic('stems')" class="export-option">🎛️ Individual Stems</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="status" id="status">Ready to generate music</div>
