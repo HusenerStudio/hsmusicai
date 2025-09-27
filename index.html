@@ -13,6 +13,62 @@
         <div class="mixing-console">
             <div class="main-controls">
                 <div class="controls">
+                    <!-- New AI Input Section -->
+                    <div class="control-group ai-input-section">
+                        <h3>🤖 AI Input</h3>
+                        
+                        <div class="input-method-tabs">
+                            <button type="button" class="tab-button active" data-tab="text">📝 Text Prompt</button>
+                            <button type="button" class="tab-button" data-tab="audio">🎵 Audio Input</button>
+                        </div>
+                        
+                        <div class="tab-content" id="text-tab">
+                            <label for="textPrompt">Describe your music:</label>
+                            <textarea id="textPrompt" placeholder="e.g., 'Create a relaxing piano piece with gentle strings', 'Upbeat rock song with guitar solos', 'Ambient electronic soundscape'..." rows="3"></textarea>
+                            
+                            <div class="prompt-suggestions">
+                                <button type="button" class="suggestion-btn" data-prompt="Create a peaceful piano ballad with soft strings">🎹 Piano Ballad</button>
+                                <button type="button" class="suggestion-btn" data-prompt="Generate an upbeat electronic dance track">🎛️ EDM Track</button>
+                                <button type="button" class="suggestion-btn" data-prompt="Compose a cinematic orchestral piece">🎬 Orchestral</button>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content hidden" id="audio-tab">
+                            <label for="audioInput">Upload audio file:</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.ogg">
+                                <div class="file-input-display">
+                                    <span class="file-icon">🎵</span>
+                                    <span class="file-text">Choose audio file or drag & drop</span>
+                                </div>
+                            </div>
+                            
+                            <div class="extension-options">
+                                <label>Extension Mode:</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="extensionMode" value="extend-end" checked>
+                                        <span>🔚 Extend at End</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="extensionMode" value="extend-start">
+                                        <span>🔜 Extend at Start</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="extensionMode" value="analyze-style">
+                                        <span>🎨 Analyze & Generate Similar</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="extension-length">
+                                <label for="extensionDuration">Extension Length:</label>
+                                <input type="range" id="extensionDuration" min="10" max="120" value="30">
+                                <span id="extensionDurationValue">30s</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="control-group">
                         <h3>🎼 Composition</h3>
                         <label for="key">Key:</label>

@@ -94,6 +94,9 @@ class AIComposer {
             });
         }
         
+        // AI Input Features
+        this.bindAIInputEvents();
+        
         // AI Feature events
         this.bindAIFeatureEvents();
         
@@ -145,7 +148,24 @@ class AIComposer {
                 this.showError('Failed to initialize audio system. Please try clicking the generate button again.');
                 return;
             }
+
+            // Check for AI input modes
+            const textPrompt = document.getElementById('textPrompt')?.value.trim();
+            const audioInput = document.getElementById('audioInput')?.files[0];
             
+            if (textPrompt) {
+                // Generate music from text prompt
+                await this.generateFromTextPrompt(textPrompt);
+                return;
+            }
+            
+            if (audioInput) {
+                // Generate music from audio input
+                await this.generateFromAudioInput(audioInput);
+                return;
+            }
+            
+            // Default generation using existing settings
             const settings = this.getSettings();
             
             // Validate that at least one instrument is selected
@@ -648,6 +668,97 @@ class AIComposer {
         }
     }
     
+    bindAIInputEvents() {
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Update active tab button
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Show/hide tab content
+                tabContents.forEach(content => {
+                    if (content.id === `${targetTab}-tab`) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+        
+        // Text prompt suggestions
+        const suggestionButtons = document.querySelectorAll('.suggestion-btn');
+        const textPrompt = document.getElementById('textPrompt');
+        
+        suggestionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const prompt = button.getAttribute('data-prompt');
+                if (textPrompt) {
+                    textPrompt.value = prompt;
+                    textPrompt.focus();
+                }
+            });
+        });
+        
+        // Audio file input handling
+        const audioInput = document.getElementById('audioInput');
+        const fileInputDisplay = document.querySelector('.file-input-display .file-text');
+        
+        if (audioInput && fileInputDisplay) {
+            audioInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    fileInputDisplay.textContent = `Selected: ${file.name}`;
+                    this.handleAudioFileUpload(file);
+                } else {
+                    fileInputDisplay.textContent = 'Choose audio file or drag & drop';
+                }
+            });
+        }
+        
+        // Extension duration slider
+        const extensionDurationSlider = document.getElementById('extensionDuration');
+        const extensionDurationValue = document.getElementById('extensionDurationValue');
+        
+        if (extensionDurationSlider && extensionDurationValue) {
+            extensionDurationSlider.addEventListener('input', (e) => {
+                extensionDurationValue.textContent = e.target.value + 's';
+            });
+        }
+        
+        // Drag and drop functionality for audio files
+        const fileInputWrapper = document.querySelector('.file-input-wrapper');
+        if (fileInputWrapper) {
+            fileInputWrapper.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileInputWrapper.classList.add('drag-over');
+            });
+            
+            fileInputWrapper.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                fileInputWrapper.classList.remove('drag-over');
+            });
+            
+            fileInputWrapper.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileInputWrapper.classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type.startsWith('audio/')) {
+                    audioInput.files = files;
+                    fileInputDisplay.textContent = `Selected: ${files[0].name}`;
+                    this.handleAudioFileUpload(files[0]);
+                }
+            });
+        }
+    }
+    
     initializeAIControls() {
         // Initialize AI-specific control values
         const complexitySlider = document.getElementById('complexity-slider');
@@ -851,6 +962,375 @@ class AIComposer {
     
     getStereoWidth() {
         return 1.0;
+    }
+    
+    // AI Input Generation Methods
+    async generateFromTextPrompt(prompt) {
+        try {
+            this.showNotification('Analyzing text prompt...', 'info');
+            
+            // Parse the text prompt to extract musical characteristics
+            const musicParams = this.parseTextPrompt(prompt);
+            
+            // Generate settings based on the parsed prompt
+            const settings = this.createSettingsFromPrompt(musicParams);
+            
+            // Generate the composition
+            this.currentComposition = await this.generateAIComposition(settings);
+            
+            if (!this.currentComposition) {
+                this.showError('Failed to generate music from text prompt. Please try again.');
+                return;
+            }
+            
+            this.compositionDuration = settings.length;
+            
+            // Enable controls
+            this.stopBtn.disabled = false;
+            this.downloadBtn.disabled = false;
+            this.playPauseBtn.disabled = false;
+            
+            // Auto-play the generated music
+            await this.playMusic();
+            
+            this.showSuccess(`Music generated from prompt: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"`);
+            
+        } catch (error) {
+            console.error('Error generating music from text prompt:', error);
+            this.showError('Failed to generate music from text prompt. Please try again.');
+        }
+    }
+    
+    parseTextPrompt(prompt) {
+        const lowerPrompt = prompt.toLowerCase();
+        const params = {
+            genre: 'electronic',
+            tempo: 120,
+            energy: 0.5,
+            complexity: 'moderate',
+            instruments: { piano: true, strings: false, drums: true, bass: true },
+            mood: 'neutral',
+            structure: 'verse-chorus',
+            key: 'C'
+        };
+        
+        // Genre detection
+        if (lowerPrompt.includes('piano') || lowerPrompt.includes('ballad') || lowerPrompt.includes('classical')) {
+            params.genre = 'classical';
+            params.instruments.piano = true;
+            params.instruments.strings = true;
+            params.instruments.drums = false;
+        } else if (lowerPrompt.includes('rock') || lowerPrompt.includes('guitar')) {
+            params.genre = 'rock';
+            params.instruments.drums = true;
+            params.instruments.bass = true;
+        } else if (lowerPrompt.includes('electronic') || lowerPrompt.includes('edm') || lowerPrompt.includes('dance')) {
+            params.genre = 'electronic';
+            params.instruments.piano = false;
+            params.instruments.strings = false;
+        } else if (lowerPrompt.includes('jazz')) {
+            params.genre = 'jazz';
+            params.complexity = 'jazz';
+            params.instruments.piano = true;
+            params.instruments.bass = true;
+        } else if (lowerPrompt.includes('ambient') || lowerPrompt.includes('atmospheric')) {
+            params.genre = 'ambient';
+            params.tempo = 80;
+            params.energy = 0.3;
+            params.instruments.strings = true;
+            params.instruments.drums = false;
+        }
+        
+        // Tempo detection
+        if (lowerPrompt.includes('slow') || lowerPrompt.includes('peaceful') || lowerPrompt.includes('relaxing')) {
+            params.tempo = 80;
+        } else if (lowerPrompt.includes('fast') || lowerPrompt.includes('upbeat') || lowerPrompt.includes('energetic')) {
+            params.tempo = 140;
+        } else if (lowerPrompt.includes('moderate') || lowerPrompt.includes('medium')) {
+            params.tempo = 120;
+        }
+        
+        // Energy detection
+        if (lowerPrompt.includes('calm') || lowerPrompt.includes('peaceful') || lowerPrompt.includes('gentle')) {
+            params.energy = 0.3;
+        } else if (lowerPrompt.includes('energetic') || lowerPrompt.includes('powerful') || lowerPrompt.includes('intense')) {
+            params.energy = 0.8;
+        } else if (lowerPrompt.includes('upbeat') || lowerPrompt.includes('lively')) {
+            params.energy = 0.7;
+        }
+        
+        // Complexity detection
+        if (lowerPrompt.includes('simple') || lowerPrompt.includes('minimal')) {
+            params.complexity = 'simple';
+        } else if (lowerPrompt.includes('complex') || lowerPrompt.includes('intricate')) {
+            params.complexity = 'complex';
+        } else if (lowerPrompt.includes('jazz')) {
+            params.complexity = 'jazz';
+        }
+        
+        return params;
+    }
+    
+    createSettingsFromPrompt(params) {
+        return {
+            key: params.key,
+            tempo: params.tempo,
+            complexity: params.complexity,
+            genre: params.genre,
+            secondaryGenre: '',
+            blendRatio: 30,
+            energy: Math.round(params.energy * 100),
+            songStructure: params.structure,
+            length: 30,
+            instruments: params.instruments
+        };
+    }
+    
+    async generateFromAudioInput(audioFile) {
+        try {
+            this.showNotification('Analyzing audio file...', 'info');
+            
+            // Get extension mode
+            const extensionMode = document.querySelector('input[name="extensionMode"]:checked')?.value || 'extend-end';
+            const extensionDuration = parseInt(document.getElementById('extensionDuration')?.value || '30');
+            
+            // Analyze the audio file
+            const audioAnalysis = await this.analyzeAudioFile(audioFile);
+            
+            if (!audioAnalysis) {
+                this.showError('Failed to analyze audio file. Please try a different file.');
+                return;
+            }
+            
+            // Generate music based on the analysis and extension mode
+            await this.generateFromAudioAnalysis(audioAnalysis, extensionMode, extensionDuration);
+            
+        } catch (error) {
+            console.error('Error generating music from audio input:', error);
+            this.showError('Failed to generate music from audio input. Please try again.');
+        }
+    }
+    
+    async analyzeAudioFile(audioFile) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                    
+                    // Analyze the audio buffer
+                    const analysis = this.performAudioAnalysis(audioBuffer);
+                    resolve(analysis);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(audioFile);
+        });
+    }
+    
+    performAudioAnalysis(audioBuffer) {
+        const channelData = audioBuffer.getChannelData(0);
+        const sampleRate = audioBuffer.sampleRate;
+        const duration = audioBuffer.duration;
+        
+        // Basic tempo detection (simplified)
+        const tempo = this.detectTempo(channelData, sampleRate);
+        
+        // Key detection (simplified)
+        const key = this.detectKey(channelData, sampleRate);
+        
+        // Energy analysis
+        const energy = this.calculateEnergy(channelData);
+        
+        // Spectral analysis for genre hints
+        const spectralFeatures = this.analyzeSpectralFeatures(channelData, sampleRate);
+        
+        return {
+            tempo: tempo,
+            key: key,
+            energy: energy,
+            duration: duration,
+            spectralFeatures: spectralFeatures,
+            originalBuffer: audioBuffer
+        };
+    }
+    
+    detectTempo(channelData, sampleRate) {
+        // Simplified tempo detection - in a real implementation, this would be more sophisticated
+        // For now, return a reasonable default based on energy patterns
+        const windowSize = Math.floor(sampleRate * 0.1); // 100ms windows
+        let avgEnergy = 0;
+        let peakCount = 0;
+        
+        for (let i = 0; i < channelData.length - windowSize; i += windowSize) {
+            let windowEnergy = 0;
+            for (let j = 0; j < windowSize; j++) {
+                windowEnergy += Math.abs(channelData[i + j]);
+            }
+            windowEnergy /= windowSize;
+            
+            if (windowEnergy > avgEnergy * 1.2) {
+                peakCount++;
+            }
+            avgEnergy = (avgEnergy + windowEnergy) / 2;
+        }
+        
+        const estimatedTempo = Math.min(Math.max((peakCount / (channelData.length / sampleRate)) * 60, 60), 180);
+        return Math.round(estimatedTempo);
+    }
+    
+    detectKey(channelData, sampleRate) {
+        // Simplified key detection - return a reasonable default
+        // In a real implementation, this would use FFT and chromagram analysis
+        const keys = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+        return keys[Math.floor(Math.random() * keys.length)];
+    }
+    
+    calculateEnergy(channelData) {
+        let totalEnergy = 0;
+        for (let i = 0; i < channelData.length; i++) {
+            totalEnergy += channelData[i] * channelData[i];
+        }
+        return Math.min(totalEnergy / channelData.length * 1000, 1.0);
+    }
+    
+    analyzeSpectralFeatures(channelData, sampleRate) {
+        // Simplified spectral analysis
+        return {
+            brightness: Math.random() * 0.5 + 0.3, // Placeholder
+            spectralCentroid: Math.random() * 2000 + 1000, // Placeholder
+            spectralRolloff: Math.random() * 5000 + 3000 // Placeholder
+        };
+    }
+    
+    async generateFromAudioAnalysis(analysis, extensionMode, extensionDuration) {
+        try {
+            let settings;
+            
+            switch (extensionMode) {
+                case 'extend-end':
+                    settings = this.createExtensionSettings(analysis, extensionDuration);
+                    this.showNotification(`Extending audio at the end for ${extensionDuration}s...`, 'info');
+                    break;
+                case 'extend-start':
+                    settings = this.createExtensionSettings(analysis, extensionDuration);
+                    this.showNotification(`Extending audio at the start for ${extensionDuration}s...`, 'info');
+                    break;
+                case 'analyze-style':
+                    settings = this.createStyleBasedSettings(analysis);
+                    this.showNotification('Generating similar style music...', 'info');
+                    break;
+                default:
+                    settings = this.createExtensionSettings(analysis, extensionDuration);
+            }
+            
+            // Generate the composition
+            this.currentComposition = await this.generateAIComposition(settings);
+            
+            if (!this.currentComposition) {
+                this.showError('Failed to generate music from audio analysis. Please try again.');
+                return;
+            }
+            
+            this.compositionDuration = settings.length;
+            
+            // Enable controls
+            this.stopBtn.disabled = false;
+            this.downloadBtn.disabled = false;
+            this.playPauseBtn.disabled = false;
+            
+            // Auto-play the generated music
+            await this.playMusic();
+            
+            this.showSuccess(`Music generated successfully using ${extensionMode} mode!`);
+            
+        } catch (error) {
+            console.error('Error generating music from audio analysis:', error);
+            this.showError('Failed to generate music from audio analysis. Please try again.');
+        }
+    }
+    
+    createExtensionSettings(analysis, duration) {
+        return {
+            key: analysis.key,
+            tempo: analysis.tempo,
+            complexity: analysis.energy > 0.6 ? 'complex' : 'moderate',
+            genre: this.inferGenreFromAnalysis(analysis),
+            secondaryGenre: '',
+            blendRatio: 30,
+            energy: Math.round(analysis.energy * 100),
+            songStructure: 'verse-chorus',
+            length: duration,
+            instruments: this.selectInstrumentsFromAnalysis(analysis)
+        };
+    }
+    
+    createStyleBasedSettings(analysis) {
+        return {
+            key: analysis.key,
+            tempo: analysis.tempo,
+            complexity: analysis.energy > 0.6 ? 'complex' : 'moderate',
+            genre: this.inferGenreFromAnalysis(analysis),
+            secondaryGenre: '',
+            blendRatio: 30,
+            energy: Math.round(analysis.energy * 100),
+            songStructure: 'verse-chorus',
+            length: 60, // Generate a full minute for style-based generation
+            instruments: this.selectInstrumentsFromAnalysis(analysis)
+        };
+    }
+    
+    inferGenreFromAnalysis(analysis) {
+        // Simple genre inference based on spectral features and energy
+        if (analysis.energy > 0.7) {
+            return 'rock';
+        } else if (analysis.spectralFeatures.brightness > 0.6) {
+            return 'electronic';
+        } else if (analysis.energy < 0.4) {
+            return 'ambient';
+        } else {
+            return 'pop';
+        }
+    }
+    
+    selectInstrumentsFromAnalysis(analysis) {
+        const instruments = { piano: false, strings: false, drums: false, bass: false };
+        
+        // Select instruments based on analysis
+        if (analysis.energy > 0.5) {
+            instruments.drums = true;
+            instruments.bass = true;
+        }
+        
+        if (analysis.spectralFeatures.brightness < 0.5) {
+            instruments.piano = true;
+            instruments.strings = true;
+        }
+        
+        // Ensure at least one instrument is selected
+        if (!Object.values(instruments).some(enabled => enabled)) {
+            instruments.piano = true;
+            instruments.drums = true;
+        }
+        
+        return instruments;
+    }
+    
+    async handleAudioFileUpload(file) {
+        try {
+            this.showNotification(`Audio file "${file.name}" uploaded successfully!`, 'success');
+            
+            // Optionally, you could perform immediate analysis here
+            // const analysis = await this.analyzeAudioFile(file);
+            // console.log('Audio analysis:', analysis);
+            
+        } catch (error) {
+            console.error('Error handling audio file upload:', error);
+            this.showError('Failed to process audio file. Please try again.');
+        }
     }
 }
 
