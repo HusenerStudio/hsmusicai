@@ -27,16 +27,20 @@ class AIComposer {
         this.structureSelect = document.getElementById('structure');
         this.genreSelect = document.getElementById('genre');
         
-        // Control buttons
+        // Control buttons - using correct IDs from HTML
         this.generateBtn = document.getElementById('generateBtn');
-        this.playBtn = document.getElementById('playBtn');
+        this.playPauseBtn = document.getElementById('playBtn');  // This is the play button
         this.stopBtn = document.getElementById('stopBtn');
-        this.exportBtn = document.getElementById('exportBtn');
+        this.downloadBtn = document.getElementById('exportBtn'); // This is the export button
         
         // Visualization elements
         this.visualizer = document.getElementById('visualizer');
         this.visualizerCtx = this.visualizer ? this.visualizer.getContext('2d') : null;
         this.status = document.getElementById('status');
+        
+        // Progress bar elements
+        this.progressBar = document.getElementById('progressBar');
+        this.progressFill = document.getElementById('progressFill');
         
         // Set canvas size if visualizer exists
         if (this.visualizer) {
@@ -57,14 +61,17 @@ class AIComposer {
         if (this.generateBtn) {
             this.generateBtn.addEventListener('click', () => this.generateMusic());
         }
-        if (this.playBtn) {
-            this.playBtn.addEventListener('click', () => this.playMusic());
+        
+        if (this.playPauseBtn) {
+            this.playPauseBtn.addEventListener('click', () => this.playMusic());
         }
+        
         if (this.stopBtn) {
             this.stopBtn.addEventListener('click', () => this.stopMusic());
         }
-        if (this.exportBtn) {
-            this.exportBtn.addEventListener('click', () => this.downloadMusic());
+        
+        if (this.downloadBtn) {
+            this.downloadBtn.addEventListener('click', () => this.downloadMusic());
         }
         
         // Style blending controls
@@ -194,6 +201,14 @@ class AIComposer {
             this.playPauseBtn.classList.add('playing');
             this.stopBtn.disabled = false;
             
+            // Show and reset progress bar
+            if (this.progressBar) {
+                this.progressBar.style.display = 'block';
+            }
+            if (this.progressFill) {
+                this.progressFill.style.width = '0%';
+            }
+            
             // Start progress tracking
             this.startProgressTracking();
             
@@ -221,8 +236,13 @@ class AIComposer {
         // Stop progress tracking
         this.stopProgressTracking();
         
-        // Reset progress
-        this.progressFill.style.width = '0%';
+        // Reset and hide progress bar
+        if (this.progressFill) {
+            this.progressFill.style.width = '0%';
+        }
+        if (this.progressBar) {
+            this.progressBar.style.display = 'none';
+        }
     }
     
     togglePlayPause() {
@@ -235,7 +255,7 @@ class AIComposer {
     
     startProgressTracking() {
         this.progressInterval = setInterval(() => {
-            if (this.isPlaying && this.compositionDuration > 0) {
+            if (this.isPlaying && this.compositionDuration > 0 && this.progressFill) {
                 const elapsed = (Date.now() - this.playStartTime) / 1000;
                 const progress = Math.min((elapsed / this.compositionDuration) * 100, 100);
                 this.progressFill.style.width = `${progress}%`;
@@ -267,6 +287,11 @@ class AIComposer {
             this.downloadBtn.disabled = true;
             this.downloadBtn.textContent = 'Preparing...';
             
+            // Convert instruments object to array of enabled instruments
+            const enabledInstruments = Object.keys(settings.instruments).filter(
+                instrument => settings.instruments[instrument]
+            );
+            
             let exportedData;
             let filename;
             let mimeType;
@@ -275,7 +300,7 @@ class AIComposer {
                 case 'wav':
                     exportedData = await this.musicGenerator.exportToWAV(
                         this.currentComposition, 
-                        settings.instruments, 
+                        enabledInstruments, 
                         settings.length,
                         24 // 24-bit high quality
                     );
@@ -292,7 +317,7 @@ class AIComposer {
                 case 'stems':
                     const stems = await this.musicGenerator.exportStems(
                         this.currentComposition, 
-                        settings.instruments, 
+                        enabledInstruments, 
                         settings.length
                     );
                     
@@ -659,43 +684,60 @@ class AIComposer {
     }
     
     async generateAIComposition(settings) {
-        // Enhanced AI composition generation with style blending
-        const aiSettings = {
-            ...settings,
-            complexity: this.getAIComplexity(),
-            energy: this.getAIEnergy(),
-            layers: this.getAILayers(),
-            genre: this.getSelectedGenre(),
-            structure: this.getSelectedStructure()
-        };
-        
-        // Apply style blending if secondary genre is selected
-        if (settings.secondaryGenre && settings.secondaryGenre !== '') {
-            const blendedStyle = this.musicGenerator.blendGenreStyles(
-                settings.genre, 
-                settings.secondaryGenre, 
-                settings.blendRatio
-            );
-            aiSettings.blendedStyle = blendedStyle;
-        }
-        
-        // Use advanced music generation with AI features
-        const composition = this.musicGenerator.generateComposition(aiSettings);
-        
-        // Apply AI enhancements and style characteristics
-        if (composition) {
-            composition.aiEnhanced = true;
-            composition.complexity = aiSettings.complexity;
-            composition.energy = aiSettings.energy;
-            composition.layers = aiSettings.layers;
+        try {
+            console.log('Generating AI composition with settings:', settings);
             
-            // Apply style-specific characteristics if blended style exists
-            if (aiSettings.blendedStyle) {
-                this.musicGenerator.applyStyleCharacteristics(composition, aiSettings.blendedStyle);
+            // Enhanced AI composition generation with style blending
+            const aiSettings = {
+                ...settings,
+                complexity: this.getAIComplexity(),
+                energy: this.getAIEnergy(),
+                layers: this.getAILayers(),
+                genre: this.getSelectedGenre(),
+                structure: this.getSelectedStructure()
+            };
+            
+            console.log('AI settings prepared:', aiSettings);
+            
+            // Apply style blending if secondary genre is selected
+            if (settings.secondaryGenre && settings.secondaryGenre !== '') {
+                console.log('Applying style blending:', settings.genre, 'with', settings.secondaryGenre);
+                const blendedStyle = this.musicGenerator.blendGenreStyles(
+                    settings.genre, 
+                    settings.secondaryGenre, 
+                    settings.blendRatio
+                );
+                aiSettings.blendedStyle = blendedStyle;
             }
+            
+            // Use advanced music generation with AI features
+            console.log('Calling generateComposition...');
+            const composition = this.musicGenerator.generateComposition(aiSettings);
+            console.log('Composition generated:', composition);
+            
+            // Apply AI enhancements and style characteristics
+            if (composition) {
+                composition.aiEnhanced = true;
+                composition.complexity = aiSettings.complexity;
+                composition.energy = aiSettings.energy;
+                composition.layers = aiSettings.layers;
+                
+                // Apply style-specific characteristics if blended style exists
+                if (aiSettings.blendedStyle) {
+                    console.log('Applying style characteristics...');
+                    this.musicGenerator.applyStyleCharacteristics(composition, aiSettings.blendedStyle);
+                }
+                
+                console.log('AI composition completed successfully');
+            } else {
+                console.error('generateComposition returned null/undefined');
+            }
+            
+            return composition;
+        } catch (error) {
+            console.error('Error in generateAIComposition:', error);
+            throw error;
         }
-        
-        return composition;
     }
     
     async harmonizeMelody() {
@@ -812,7 +854,7 @@ class AIComposer {
     }
 }
 
-// Initialize the AI Composer when the page loads
+// Initialize the AI Composer when the page loads and expose it globally
 document.addEventListener('DOMContentLoaded', () => {
-    new AIComposer();
+    window.app = new AIComposer();
 });

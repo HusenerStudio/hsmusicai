@@ -664,9 +664,14 @@ class MusicGenerator {
         const modulatorGain = this.audioContext.createGain();
         const carrierGain = this.audioContext.createGain();
         
-        carrier.frequency.setValueAtTime(carrierFreq, this.audioContext.currentTime);
-        modulator.frequency.setValueAtTime(modulatorFreq, this.audioContext.currentTime);
-        modulatorGain.gain.setValueAtTime(modulationIndex * carrierFreq, this.audioContext.currentTime);
+        // Validate frequencies to prevent non-finite values
+        const safeCarrierFreq = isFinite(carrierFreq) && carrierFreq > 0 ? carrierFreq : 440;
+        const safeModulatorFreq = isFinite(modulatorFreq) && modulatorFreq > 0 ? modulatorFreq : 440;
+        const safeModulationIndex = isFinite(modulationIndex) ? modulationIndex : 1;
+        
+        carrier.frequency.setValueAtTime(safeCarrierFreq, this.audioContext.currentTime);
+        modulator.frequency.setValueAtTime(safeModulatorFreq, this.audioContext.currentTime);
+        modulatorGain.gain.setValueAtTime(safeModulationIndex * safeCarrierFreq, this.audioContext.currentTime);
         
         if (this.wavetables[waveform]) {
             carrier.setPeriodicWave(this.wavetables[waveform]);
@@ -741,15 +746,25 @@ class MusicGenerator {
 
     applyPianoEnvelope(gainNode, duration, velocity, frequency) {
         const now = this.audioContext.currentTime;
+        
+        // Validate inputs to prevent non-finite values
+        if (!isFinite(velocity) || velocity < 0) velocity = 0.7;
+        if (!isFinite(frequency) || frequency <= 0) frequency = 440;
+        if (!isFinite(duration) || duration <= 0) duration = 1;
+        
         const attack = 0.01 + (1 - velocity) * 0.05;
         const decay = 0.1 + frequency / 1000 * 0.1;
         const sustain = 0.3 + velocity * 0.4;
         const release = Math.max(0.5, duration * 0.6);
         
+        // Validate calculated values before using setValueAtTime
+        const safeVelocity = isFinite(velocity) ? Math.max(0.001, velocity) : 0.7;
+        const safeSustain = isFinite(sustain) ? Math.max(0.001, sustain) : 0.3;
+        
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(velocity, now + attack);
-        gainNode.gain.exponentialRampToValueAtTime(sustain, now + attack + decay);
-        gainNode.gain.setValueAtTime(sustain, now + duration - release);
+        gainNode.gain.linearRampToValueAtTime(safeVelocity, now + attack);
+        gainNode.gain.exponentialRampToValueAtTime(safeSustain, now + attack + decay);
+        gainNode.gain.setValueAtTime(safeSustain, now + duration - release);
         gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
     }
 
@@ -1682,7 +1697,9 @@ class MusicGenerator {
     
     getNoteValue(note) {
         const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        return notes.indexOf(note);
+        const index = notes.indexOf(note);
+        // Return 0 (C) as default if note is not found to prevent -1 which causes NaN frequencies
+        return index !== -1 ? index : 0;
     }
     
     async playComposition(composition, instruments) {
@@ -1762,6 +1779,11 @@ class MusicGenerator {
     }
     
     noteToFrequency(note, octave) {
+        // Validate inputs to prevent NaN frequencies
+        if (typeof octave !== 'number' || !isFinite(octave)) {
+            octave = 4; // Default to middle octave
+        }
+        
         // Use cached frequency if available for better performance
         if (typeof note === 'string' && typeof octave === 'number') {
             const cacheKey = `${note}${octave}`;
@@ -1775,6 +1797,12 @@ class MusicGenerator {
         const noteValue = typeof note === 'number' ? note : this.getNoteValue(note);
         const semitones = (octave - 4) * 12 + noteValue - 9; // A4 is reference
         const frequency = A4 * Math.pow(2, semitones / 12);
+        
+        // Validate the calculated frequency
+        if (!isFinite(frequency) || frequency <= 0) {
+            console.warn(`Invalid frequency calculated for note ${note}, octave ${octave}. Using default 440Hz.`);
+            return 440; // Return A4 as fallback
+        }
         
         // Cache the result for future use
         if (typeof note === 'string' && typeof octave === 'number') {
@@ -1974,31 +2002,52 @@ class MusicGenerator {
         if (composition.chords) {
             composition.chords.forEach((chord, index) => {
                 const startTime = index * 2; // 2 seconds per chord
-                chord.notes.forEach(note => {
-                    const frequency = this.noteToFrequency(note, 4);
-                    this.createOfflineInstrumentNote(
-                        offlineContext, 
-                        instrument, 
-                        frequency, 
-                        startTime, 
-                        1.8, 
-                        0.7, 
-                        effectsChain
-                    );
-                });
+                
+                // Handle different chord formats
+                if (chord.notes) {
+                    // Advanced composition format with notes array
+                    chord.notes.forEach(note => {
+                        const frequency = this.noteToFrequency(note, 4);
+                        this.createOfflineInstrumentNote(
+                            offlineContext, 
+                            instrument, 
+                            frequency, 
+                            startTime, 
+                            1.8, 
+                            0.7, 
+                            effectsChain
+                        );
+                    });
+                } else if (chord.degree) {
+                    // Simple composition format with chord degree
+                    const chordNotes = this.getChordNotes(chord.degree, composition.key || 'C');
+                    chordNotes.forEach(note => {
+                        const frequency = this.noteToFrequency(note, 4);
+                        this.createOfflineInstrumentNote(
+                            offlineContext, 
+                            instrument, 
+                            frequency, 
+                            startTime, 
+                            chord.duration || 1.8, 
+                            chord.velocity || 0.7, 
+                            effectsChain
+                        );
+                    });
+                }
             });
         }
 
         if (composition.melody && instrument === 'lead') {
             composition.melody.forEach(note => {
-                const startTime = note.beat * (60 / (composition.tempo || 120));
+                const startTime = note.beat ? note.beat * (60 / (composition.tempo || 120)) : 0;
+                const frequency = note.frequency || this.noteToFrequency(note.note || note, 4);
                 this.createOfflineInstrumentNote(
                     offlineContext,
                     'piano',
-                    note.frequency,
+                    frequency,
                     startTime,
-                    note.duration,
-                    note.velocity / 127,
+                    note.duration || 1,
+                    (note.velocity || 64) / 127,
                     effectsChain
                 );
             });

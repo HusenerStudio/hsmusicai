@@ -179,6 +179,7 @@ body {
 /* Custom Range Slider Styling */
 .control-group input[type="range"] {
     -webkit-appearance: none;
+    appearance: none;
     height: 6px;
     background: var(--border-color);
     border-radius: 3px;
@@ -601,6 +602,7 @@ button:hover::before {
 .fader-vertical {
     writing-mode: bt-lr;
     -webkit-appearance: slider-vertical;
+    appearance: slider-vertical;
     width: 30px;
     height: 150px;
 }
