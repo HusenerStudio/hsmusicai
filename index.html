@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Generator Pro - Udio Quality</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="logo">🎵 AI Music Generator Pro</h1>
+        
+        <div class="mixing-console">
+            <div class="main-controls">
+                <div class="controls">
+                    <div class="control-group">
+                        <h3>🎼 Composition</h3>
+                        <label for="key">Key:</label>
+                        <select id="key">
+                            <option value="C">C Major</option>
+                            <option value="G">G Major</option>
+                            <option value="D">D Major</option>
+                            <option value="A">A Major</option>
+                            <option value="E">E Major</option>
+                            <option value="B">B Major</option>
+                            <option value="F#">F# Major</option>
+                            <option value="Db">Db Major</option>
+                            <option value="Ab">Ab Major</option>
+                            <option value="Eb">Eb Major</option>
+                            <option value="Bb">Bb Major</option>
+                            <option value="F">F Major</option>
+                            <option value="Am">A Minor</option>
+                            <option value="Em">E Minor</option>
+                            <option value="Bm">B Minor</option>
+                            <option value="F#m">F# Minor</option>
+                            <option value="C#m">C# Minor</option>
+                            <option value="G#m">G# Minor</option>
+                            <option value="D#m">D# Minor</option>
+                            <option value="Bbm">Bb Minor</option>
+                            <option value="Fm">F Minor</option>
+                            <option value="Cm">C Minor</option>
+                            <option value="Gm">G Minor</option>
+                            <option value="Dm">D Minor</option>
+                        </select>
+                        
+                        <label for="tempo">Tempo (BPM):</label>
+                        <input type="range" id="tempo" min="60" max="200" value="120">
+                        <span id="tempoValue">120</span>
+                        
+                        <label for="complexity">Complexity:</label>
+                        <select id="complexity">
+                            <option value="simple">Simple</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="complex">Complex</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="classical">Classical</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>🎸 Arrangement</h3>
+                        <label for="structure">Song Structure:</label>
+                        <select id="structure">
+                            <option value="simple">Verse-Chorus</option>
+                            <option value="extended">Intro-Verse-Chorus-Bridge</option>
+                            <option value="complex">Full Song Structure</option>
+                            <option value="instrumental">Instrumental</option>
+                        </select>
+                        
+                        <label for="genre">Genre Style:</label>
+                        <select id="genre">
+                            <option value="pop">Pop</option>
+                            <option value="rock">Rock</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="classical">Classical</option>
+                            <option value="electronic">Electronic</option>
+                            <option value="ambient">Ambient</option>
+                            <option value="cinematic">Cinematic</option>
+                        </select>
+                        
+                        <label for="energy">Energy Level:</label>
+                        <input type="range" id="energy" min="1" max="10" value="5">
+                        <span id="energyValue">5</span>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>🎹 Instruments</h3>
+                        <label for="instruments">Lead Instrument:</label>
+                        <select id="instruments">
+                            <option value="piano">Advanced Piano</option>
+                            <option value="strings">Orchestral Strings</option>
+                            <option value="synth">FM Synthesizer</option>
+                            <option value="guitar">Electric Guitar</option>
+                            <option value="brass">Brass Section</option>
+                        </select>
+                        
+                        <label for="layers">Arrangement Layers:</label>
+                        <input type="range" id="layers" min="2" max="8" value="4">
+                        <span id="layersValue">4</span>
+                        
+                        <label for="dynamics">Dynamics:</label>
+                        <select id="dynamics">
+                            <option value="soft">Soft (pp)</option>
+                            <option value="medium">Medium (mf)</option>
+                            <option value="loud">Loud (ff)</option>
+                            <option value="dynamic">Dynamic Range</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>🎚️ Mix & Master</h3>
+                        <label for="reverb">Reverb:</label>
+                        <input type="range" id="reverb" min="0" max="100" value="30">
+                        <span id="reverbValue">30%</span>
+                        
+                        <label for="delay">Delay:</label>
+                        <input type="range" id="delay" min="0" max="100" value="20">
+                        <span id="delayValue">20%</span>
+                        
+                        <label for="chorus">Chorus:</label>
+                        <input type="range" id="chorus" min="0" max="100" value="15">
+                        <span id="chorusValue">15%</span>
+                        
+                        <label for="compression">Compression:</label>
+                        <input type="range" id="compression" min="0" max="100" value="40">
+                        <span id="compressionValue">40%</span>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button id="generateBtn" class="primary">🎼 Generate Composition</button>
+                    <button id="playBtn" class="secondary">▶️ Play</button>
+                    <button id="stopBtn" class="danger">⏹️ Stop</button>
+                    <button id="exportBtn" class="secondary">💾 Export WAV</button>
+                </div>
+
+                <div class="status" id="status">Ready to generate music</div>
+            </div>
+
+            <div class="master-section">
+                <div class="master-controls">
+                    <div class="master-fader">
+                        <h3>Master Volume</h3>
+                        <div class="fader-container">
+                            <input type="range" id="masterVolume" class="fader-vertical" min="0" max="100" value="70" orient="vertical">
+                            <span id="masterVolumeValue">70%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="effects-rack">
+                        <div class="effect-unit">
+                            <h4>Compressor</h4>
+                            <input type="range" id="compThreshold" min="-40" max="0" value="-12">
+                            <label>Threshold</label>
+                        </div>
+                        <div class="effect-unit">
+                            <h4>EQ High</h4>
+                            <input type="range" id="eqHigh" min="-12" max="12" value="0">
+                            <label>+/- 12dB</label>
+                        </div>
+                        <div class="effect-unit">
+                            <h4>EQ Low</h4>
+                            <input type="range" id="eqLow" min="-12" max="12" value="0">
+                            <label>+/- 12dB</label>
+                        </div>
+                        <div class="effect-unit">
+                            <h4>Stereo Width</h4>
+                            <input type="range" id="stereoWidth" min="0" max="200" value="100">
+                            <label>Width %</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualizer">
+            <canvas id="visualizer" width="800" height="250"></canvas>
+        </div>
+
+        <div class="ai-features" style="margin-top: 30px;">
+            <div class="control-group">
+                <h3>🤖 AI Features</h3>
+                <button id="aiAnalyze" class="secondary">🔍 Analyze Harmony</button>
+                <button id="aiImprove" class="primary">✨ AI Enhancement</button>
+                <button id="aiVariation" class="secondary">🔄 Generate Variation</button>
+                <button id="aiMastering" class="primary">🎛️ AI Mastering</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="musicGenerator.js"></script>
+    <script src="app.js"></script>
+    <script src="recorder.js"></script>
+</body>
+</html>
