@@ -1579,8 +1579,18 @@ class MusicGenerator {
     createAdvancedSnare(startTime, velocity) {
         // Layered snare with tonal component and noise
         const tonal = this.createFMSynth(200, 150, 1.5, 0.2, 'triangle');
-        const noise = this.createFilteredNoise(0.2, 'highpass', 1000, 2);
-        const rattle = this.createFilteredNoise(0.15, 'bandpass', 3000, 5);
+        
+        // Create noise sources with proper AudioBuffer handling
+        const noiseBuffer = this.createFilteredNoise(0.2, 'highpass', 1000, 2);
+        const rattleBuffer = this.createFilteredNoise(0.15, 'bandpass', 3000, 5);
+        
+        const noiseSource = this.audioContext.createBufferSource();
+        const rattleSource = this.audioContext.createBufferSource();
+        const noiseGain = this.audioContext.createGain();
+        const rattleGain = this.audioContext.createGain();
+        
+        noiseSource.buffer = noiseBuffer;
+        rattleSource.buffer = rattleBuffer;
         
         const masterGain = this.audioContext.createGain();
         const compressor = this.audioContext.createDynamicsCompressor();
@@ -1590,22 +1600,32 @@ class MusicGenerator {
         
         // Mix components
         tonal.gain.gain.setValueAtTime(velocity * 0.4, this.audioContext.currentTime);
-        noise.gain.setValueAtTime(velocity * 0.6, this.audioContext.currentTime);
-        rattle.gain.setValueAtTime(velocity * 0.3, this.audioContext.currentTime);
+        noiseGain.gain.setValueAtTime(velocity * 0.6, this.audioContext.currentTime);
+        rattleGain.gain.setValueAtTime(velocity * 0.3, this.audioContext.currentTime);
+        
+        // Connect audio graph
+        noiseSource.connect(noiseGain);
+        rattleSource.connect(rattleGain);
         
         tonal.gain.connect(compressor);
-        noise.connect(compressor);
-        rattle.connect(compressor);
+        noiseGain.connect(compressor);
+        rattleGain.connect(compressor);
         compressor.connect(masterGain);
         masterGain.connect(this.effectsChain.input);
         
         // Start components
         tonal.oscillator.start(this.audioContext.currentTime + startTime);
         tonal.modulator.start(this.audioContext.currentTime + startTime);
-        noise.start(this.audioContext.currentTime + startTime);
-        rattle.start(this.audioContext.currentTime + startTime);
+        noiseSource.start(this.audioContext.currentTime + startTime);
+        rattleSource.start(this.audioContext.currentTime + startTime);
         
-        return { tonal, noise, rattle, masterGain };
+        // Stop components
+        tonal.oscillator.stop(this.audioContext.currentTime + startTime + 0.2);
+        tonal.modulator.stop(this.audioContext.currentTime + startTime + 0.2);
+        noiseSource.stop(this.audioContext.currentTime + startTime + 0.2);
+        rattleSource.stop(this.audioContext.currentTime + startTime + 0.15);
+        
+        return { tonal, noise: { source: noiseSource, gain: noiseGain }, rattle: { source: rattleSource, gain: rattleGain }, masterGain };
     }
 
     createFilteredNoise(duration, filterType, frequency, Q) {
@@ -1617,19 +1637,8 @@ class MusicGenerator {
             data[i] = Math.random() * 2 - 1;
         }
         
-        const source = this.audioContext.createBufferSource();
-        const filter = this.audioContext.createBiquadFilter();
-        const gain = this.audioContext.createGain();
-        
-        source.buffer = buffer;
-        filter.type = filterType;
-        filter.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-        filter.Q.setValueAtTime(Q, this.audioContext.currentTime);
-        
-        source.connect(filter);
-        filter.connect(gain);
-        
-        return source;
+        // Return the AudioBuffer directly, not the source node
+        return buffer;
     }
 
     generateMelody(scale, length, style) {
@@ -1703,58 +1712,114 @@ class MusicGenerator {
     }
     
     async playComposition(composition, instruments) {
-        if (this.isPlaying) {
-            this.stop();
-        }
-        
-        this.isPlaying = true;
-        this.currentComposition = composition;
-        this.startTime = this.audioContext.currentTime;
-        
-        // Play melody
-        if (composition.melody && instruments.melody) {
-            let time = 0;
-            composition.melody.forEach(note => {
-                const frequency = this.noteToFrequency(note.note, note.octave || 4);
-                
-                switch (instruments.melody) {
-                    case 'piano':
-                        this.createPianoNote(frequency, time, note.duration, note.velocity);
-                        break;
-                    case 'strings':
-                        this.createStringNote(frequency, time, note.duration, note.velocity);
-                        break;
-                    default:
-                        this.createOscillator(frequency, 'sine', note.duration, time);
-                }
-                
-                time += note.duration;
-            });
-        }
-        
-        // Play chords
-        if (composition.chords && instruments.chords) {
-            let time = 0;
-            composition.chords.forEach(chord => {
-                const chordNotes = this.getChordNotes(chord, composition.key);
-                
-                chordNotes.forEach(note => {
-                    const frequency = this.noteToFrequency(note, 3);
-                    
-                    switch (instruments.chords) {
-                        case 'piano':
-                            this.createPianoNote(frequency, time, chord.duration, chord.velocity);
-                            break;
-                        case 'strings':
-                            this.createStringNote(frequency, time, chord.duration, chord.velocity);
-                            break;
-                        default:
-                            this.createOscillator(frequency, 'sine', chord.duration, time);
+        try {
+            if (this.isPlaying) {
+                this.stop();
+            }
+            
+            // Check if audio context is initialized
+            if (!this.audioContext) {
+                throw new Error('Audio context not initialized');
+            }
+            
+            // Check if composition is valid
+            if (!composition) {
+                throw new Error('No composition provided');
+            }
+            
+            this.isPlaying = true;
+            this.currentComposition = composition;
+            this.startTime = this.audioContext.currentTime;
+            
+            console.log('Playing composition:', composition);
+            console.log('With instruments:', instruments);
+            
+            // Play melody with piano if enabled
+            if (composition.melody && instruments.piano) {
+                let time = 0;
+                composition.melody.forEach(note => {
+                    if (note && note.note) {
+                        const frequency = this.noteToFrequency(note.note, note.octave || 4);
+                        this.createPianoNote(frequency, this.startTime + time, note.duration || 0.5, note.velocity || 0.7);
+                        time += note.duration || 0.5;
                     }
                 });
+            }
+            
+            // Play melody with strings if enabled and piano is not
+            if (composition.melody && instruments.strings && !instruments.piano) {
+                let time = 0;
+                composition.melody.forEach(note => {
+                    if (note && note.note) {
+                        const frequency = this.noteToFrequency(note.note, note.octave || 4);
+                        this.createStringNote(frequency, this.startTime + time, note.duration || 0.5, note.velocity || 0.5);
+                        time += note.duration || 0.5;
+                    }
+                });
+            }
+            
+            // Play chords with piano if enabled
+            if (composition.chords && instruments.piano) {
+                let time = 0;
+                composition.chords.forEach(chord => {
+                    if (chord) {
+                        const chordNotes = this.getChordNotes(chord, composition.key);
+                        
+                        chordNotes.forEach(note => {
+                            const frequency = this.noteToFrequency(note, 3);
+                            this.createPianoNote(frequency, this.startTime + time, chord.duration || 1, chord.velocity || 0.5);
+                        });
+                        
+                        time += chord.duration || 1;
+                    }
+                });
+            }
+            
+            // Play bass line if enabled
+            if (composition.chords && instruments.bass) {
+                let time = 0;
+                composition.chords.forEach(chord => {
+                    if (chord) {
+                        const chordNotes = this.getChordNotes(chord, composition.key);
+                        if (chordNotes.length > 0) {
+                            const bassNote = chordNotes[0]; // Use root note for bass
+                            const frequency = this.noteToFrequency(bassNote, 2); // Lower octave for bass
+                            this.createBassNote(frequency, this.startTime + time, chord.duration || 1, chord.velocity || 0.8);
+                        }
+                        time += chord.duration || 1;
+                    }
+                });
+            }
+            
+            // Play drums if enabled
+            if (instruments.drums) {
+                // Simple drum pattern
+                const beatDuration = 0.5; // Half second per beat
+                const totalBeats = Math.ceil((composition.melody?.length || composition.chords?.length || 8) * 2);
                 
-                time += chord.duration;
-            });
+                for (let beat = 0; beat < totalBeats; beat++) {
+                    const time = this.startTime + (beat * beatDuration);
+                    
+                    // Kick on beats 1 and 3
+                    if (beat % 4 === 0 || beat % 4 === 2) {
+                        this.createAdvancedDrums('kick', time, 0.8);
+                    }
+                    
+                    // Snare on beats 2 and 4
+                    if (beat % 4 === 1 || beat % 4 === 3) {
+                        this.createAdvancedDrums('snare', time, 0.7);
+                    }
+                    
+                    // Hi-hat on every beat
+                    this.createAdvancedDrums('hihat', time, 0.4);
+                }
+            }
+            
+            console.log('Composition playback started');
+        } catch (error) {
+            console.error('Error in playComposition:', error);
+            this.isPlaying = false;
+            throw error; // Re-throw to be caught by the calling function
         }
     }
     

@@ -7,6 +7,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🎵 HS Music AI</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="plans.html" class="nav-link">Plans</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
     <div class="container">
         <h1 class="logo">🎵 HS Music AI</h1>
         
@@ -30,6 +46,15 @@
                                 <button type="button" class="suggestion-btn" data-prompt="Create a peaceful piano ballad with soft strings">🎹 Piano Ballad</button>
                                 <button type="button" class="suggestion-btn" data-prompt="Generate an upbeat electronic dance track">🎛️ EDM Track</button>
                                 <button type="button" class="suggestion-btn" data-prompt="Compose a cinematic orchestral piece">🎬 Orchestral</button>
+                            </div>
+
+                            <!-- Suno AI Style Create Button -->
+                            <div class="create-music-section">
+                                <button id="createMusicBtn" class="create-music-btn">
+                                    <span class="btn-icon">🎵</span>
+                                    <span class="btn-text">Create Music</span>
+                                    <span class="btn-subtitle">Generate your AI composition</span>
+                                </button>
                             </div>
                         </div>
                         

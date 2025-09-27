@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Plans - HS Music AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .plans-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .plans-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .plans-header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .plans-header p {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .plan-card.featured {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+
+        .plan-card.featured::before {
+            content: "Most Popular";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .plan-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .plan-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-period {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+
+        .plan-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .feature-check {
+            background: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-cross {
+            background: #f44336;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .basic-button {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+        }
+
+        .pro-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .god-button {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+
+        .plan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .basic-card {
+            border-top: 4px solid #74b9ff;
+        }
+
+        .pro-card {
+            border-top: 4px solid #667eea;
+        }
+
+        .god-card {
+            border-top: 4px solid #fd79a8;
+        }
+
+        .comparison-section {
+            margin-top: 4rem;
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 3rem;
+        }
+
+        .comparison-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .plan-card.featured {
+                transform: none;
+            }
+            
+            .plans-header h1 {
+                font-size: 2rem;
+            }
+            
+            .comparison-table {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🎵 HS Music AI</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="plans.html" class="nav-link active">Plans</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="plans-container">
+        <div class="plans-header">
+            <h1>Choose Your Plan</h1>
+            <p>Unlock the power of AI music generation with our flexible pricing options. From basic compositions to professional-grade productions.</p>
+        </div>
+
+        <div class="plans-grid">
+            <!-- Basic Plan -->
+            <div class="plan-card basic-card">
+                <div class="plan-header">
+                    <div class="plan-name">Basic</div>
+                    <div class="plan-price">Free</div>
+                    <div class="plan-period">Forever</div>
+                </div>
+                <ul class="plan-features">
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Basic music generation
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        3 compositions per day
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Standard quality (MP3)
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Basic instruments
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-cross">✗</div>
+                        Audio input analysis
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-cross">✗</div>
+                        Advanced effects
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-cross">✗</div>
+                        High-quality exports
+                    </li>
+                </ul>
+                <button class="plan-button basic-button" onclick="selectPlan('basic')">Get Started</button>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="plan-card pro-card featured">
+                <div class="plan-header">
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price">$9.99</div>
+                    <div class="plan-period">per month</div>
+                </div>
+                <ul class="plan-features">
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Unlimited compositions
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Audio input analysis
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Advanced instruments
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Professional effects
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        High-quality exports (WAV)
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Faster generation
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Priority support
+                    </li>
+                </ul>
+                <button class="plan-button pro-button" onclick="selectPlan('pro')">Upgrade to Pro</button>
+            </div>
+
+            <!-- God Plan -->
+            <div class="plan-card god-card">
+                <div class="plan-header">
+                    <div class="plan-name">God</div>
+                    <div class="plan-price">FREE</div>
+                    <div class="plan-period">forever</div>
+                </div>
+                <ul class="plan-features">
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Everything in Pro
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Ultra-fast generation
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Studio-quality exports
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        FLAC & 24-bit WAV
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Advanced AI models
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Stem separation
+                    </li>
+                    <li>
+                        <div class="feature-icon feature-check">✓</div>
+                        Commercial license
+                    </li>
+                </ul>
+                <button class="plan-button god-button" onclick="selectPlan('god')">Go God Mode</button>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="comparison-title">Feature Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Basic</th>
+                        <th>Pro</th>
+                        <th>God</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Daily Compositions</td>
+                        <td>3</td>
+                        <td>Unlimited</td>
+                        <td>Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Generation Speed</td>
+                        <td>Standard</td>
+                        <td>2x Faster</td>
+                        <td>5x Faster</td>
+                    </tr>
+                    <tr>
+                        <td>Audio Quality</td>
+                        <td>MP3 (128kbps)</td>
+                        <td>WAV (16-bit)</td>
+                        <td>FLAC/WAV (24-bit)</td>
+                    </tr>
+                    <tr>
+                        <td>Instruments</td>
+                        <td>Basic (4)</td>
+                        <td>Advanced (12)</td>
+                        <td>Professional (25+)</td>
+                    </tr>
+                    <tr>
+                        <td>Effects & Processing</td>
+                        <td>Basic</td>
+                        <td>Professional</td>
+                        <td>Studio-grade</td>
+                    </tr>
+                    <tr>
+                        <td>Commercial Use</td>
+                        <td>❌</td>
+                        <td>Limited</td>
+                        <td>Full License</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function selectPlan(planType) {
+            // Store selected plan
+            localStorage.setItem('selectedPlan', planType);
+            
+            // Show confirmation
+            const planNames = {
+                'basic': 'Basic (Free)',
+                'pro': 'Pro ($9.99/month)',
+                'god': 'God (FREE forever)'
+            };
+            
+            if (planType === 'basic') {
+                alert(`Welcome to ${planNames[planType]}! You can start using the basic features immediately.`);
+                window.location.href = 'index.html';
+            } else {
+                alert(`You've selected the ${planNames[planType]} plan! Redirecting to payment...`);
+                // In a real app, this would redirect to a payment processor
+                console.log(`Selected plan: ${planType}`);
+            }
+        }
+
+        // Highlight current plan if user has one selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedPlan = localStorage.getItem('selectedPlan');
+            if (selectedPlan) {
+                const planCard = document.querySelector(`.${selectedPlan}-card`);
+                if (planCard) {
+                    planCard.style.border = '3px solid #4CAF50';
+                    const button = planCard.querySelector('.plan-button');
+                    if (button && selectedPlan !== 'basic') {
+                        button.textContent = 'Current Plan';
+                        button.style.background = '#4CAF50';
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

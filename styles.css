@@ -1,17 +1,17 @@
 /* Professional AI Music Generator Styling */
 :root {
-    --primary-bg: #0a0a0a;
-    --secondary-bg: #1a1a1a;
-    --tertiary-bg: #2a2a2a;
-    --accent-color: #00ff88;
-    --accent-secondary: #ff6b35;
+    --primary-bg: #1a1a1a;
+    --secondary-bg: #2a2a2a;
+    --tertiary-bg: #3a3a3a;
+    --accent-color: #ffd700;
+    --accent-secondary: #c0c0c0;
     --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-muted: #666666;
-    --border-color: #333333;
-    --shadow-color: rgba(0, 255, 136, 0.2);
-    --gradient-primary: linear-gradient(135deg, #00ff88, #00cc6a);
-    --gradient-secondary: linear-gradient(135deg, #ff6b35, #ff4500);
+    --text-secondary: #e0e0e0;
+    --text-muted: #999999;
+    --border-color: #555555;
+    --shadow-color: rgba(255, 215, 0, 0.3);
+    --gradient-primary: linear-gradient(135deg, #ffd700, #ffed4e);
+    --gradient-secondary: linear-gradient(135deg, #c0c0c0, #e8e8e8);
 }
 
 * {
@@ -28,14 +28,153 @@ body {
     overflow-x: hidden;
 }
 
-.container {
+/* Navigation Styles */
+.navbar {
+    background: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.nav-container {
     max-width: 1400px;
     margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-logo h2 {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--accent-color);
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 20px auto;
     padding: 20px;
     background: var(--secondary-bg);
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
+}
+
+/* Suno AI Style Create Music Button */
+.create-music-section {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.create-music-btn {
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: 16px;
+    padding: 1.5rem 3rem;
+    color: #000;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 280px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.create-music-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(255, 215, 0, 0.4);
+    background: linear-gradient(135deg, #ffed4e, #ffd700);
+}
+
+.create-music-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+}
+
+.create-music-btn .btn-icon {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.create-music-btn .btn-text {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.create-music-btn .btn-subtitle {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.8;
+    margin-top: 0.25rem;
+}
+
+.create-music-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.create-music-btn:hover::before {
+    left: 100%;
+}
+
+/* Loading state for create button */
+.create-music-btn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.create-music-btn.loading .btn-text::after {
+    content: '...';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
 }
 
 .header {
@@ -402,7 +541,7 @@ button:hover::before {
 /* AI Input Section Styling */
 .ai-input-section {
     border: 2px solid var(--accent-color);
-    background: rgba(0, 255, 136, 0.05);
+    background: rgba(255, 215, 0, 0.05);
     box-shadow: 0 10px 30px var(--shadow-color);
 }
 
@@ -560,7 +699,7 @@ button:hover::before {
 
 .file-input-display:hover {
     border-color: var(--accent-color);
-    background: rgba(0, 255, 136, 0.05);
+    background: rgba(255, 215, 0, 0.05);
     color: var(--text-primary);
 }
 
@@ -622,7 +761,7 @@ button:hover::before {
 }
 
 .radio-option:has(input:checked) {
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(255, 215, 0, 0.1);
     border-color: var(--accent-color);
 }
 
@@ -660,7 +799,7 @@ button:hover::before {
 /* Drag and drop styling */
 .file-input-wrapper.drag-over .file-input-display {
     border-color: var(--accent-color);
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(255, 215, 0, 0.1);
     color: var(--accent-color);
     transform: scale(1.02);
 }
@@ -907,7 +1046,7 @@ button:hover::before {
 }
 
 .status.playing {
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 204, 106, 0.2));
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 237, 78, 0.2));
     color: var(--accent-color);
     border: 1px solid var(--accent-color);
     box-shadow: 0 0 20px var(--shadow-color);

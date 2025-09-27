@@ -32,6 +32,7 @@ class AIComposer {
         this.playPauseBtn = document.getElementById('playBtn');  // This is the play button
         this.stopBtn = document.getElementById('stopBtn');
         this.downloadBtn = document.getElementById('exportBtn'); // This is the export button
+        this.createMusicBtn = document.getElementById('createMusicBtn'); // New Suno AI-style button
         
         // Visualization elements
         this.visualizer = document.getElementById('visualizer');
@@ -72,6 +73,11 @@ class AIComposer {
         
         if (this.downloadBtn) {
             this.downloadBtn.addEventListener('click', () => this.downloadMusic());
+        }
+        
+        // New Create Music button event
+        if (this.createMusicBtn) {
+            this.createMusicBtn.addEventListener('click', () => this.handleCreateMusic());
         }
         
         // Style blending controls
@@ -1116,8 +1122,13 @@ class AIComposer {
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
+                    // Ensure audio context is initialized
+                    if (!this.musicGenerator.audioContext) {
+                        await this.initializeAudio();
+                    }
+                    
                     const arrayBuffer = e.target.result;
-                    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                    const audioBuffer = await this.musicGenerator.audioContext.decodeAudioData(arrayBuffer);
                     
                     // Analyze the audio buffer
                     const analysis = this.performAudioAnalysis(audioBuffer);
@@ -1330,6 +1341,43 @@ class AIComposer {
         } catch (error) {
             console.error('Error handling audio file upload:', error);
             this.showError('Failed to process audio file. Please try again.');
+        }
+    }
+    
+    // Suno AI-style Create Music handler
+    async handleCreateMusic() {
+        try {
+            // Get the text prompt from the AI input
+            const promptInput = document.getElementById('aiPromptInput');
+            const prompt = promptInput ? promptInput.value.trim() : '';
+            
+            if (!prompt) {
+                this.showError('Please enter a description of the music you want to create.');
+                return;
+            }
+            
+            // Show loading state on the button
+            const button = this.createMusicBtn;
+            const originalContent = button.innerHTML;
+            button.classList.add('loading');
+            button.disabled = true;
+            
+            // Generate music from the text prompt
+            await this.generateFromTextPrompt(prompt);
+            
+            // Reset button state
+            button.classList.remove('loading');
+            button.disabled = false;
+            
+        } catch (error) {
+            console.error('Error in Create Music:', error);
+            this.showError('Failed to create music. Please try again.');
+            
+            // Reset button state on error
+            if (this.createMusicBtn) {
+                this.createMusicBtn.classList.remove('loading');
+                this.createMusicBtn.disabled = false;
+            }
         }
     }
 }
