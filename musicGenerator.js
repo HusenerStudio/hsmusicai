@@ -458,6 +458,11 @@ class MusicGenerator {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
+            // Resume audio context if it's suspended (required by modern browsers)
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            
             // Create master effects chain
             await this.createEffectsChain();
             

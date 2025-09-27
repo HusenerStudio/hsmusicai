@@ -124,19 +124,21 @@ class AIComposer {
     }
     
     async generateMusic() {
-        if (!this.isInitialized) {
-            await this.initializeAudio();
-        }
-        
-        if (!this.isInitialized) {
-            return;
-        }
-        
         // Show loading state
         this.generateBtn.classList.add('loading');
         this.generateBtn.disabled = true;
         
         try {
+            // Initialize audio if not already done
+            if (!this.isInitialized) {
+                await this.initializeAudio();
+            }
+            
+            if (!this.isInitialized) {
+                this.showError('Failed to initialize audio system. Please try clicking the generate button again.');
+                return;
+            }
+            
             const settings = this.getSettings();
             
             // Validate that at least one instrument is selected
@@ -148,6 +150,12 @@ class AIComposer {
             
             // Generate AI-enhanced composition
             this.currentComposition = await this.generateAIComposition(settings);
+            
+            if (!this.currentComposition) {
+                this.showError('Failed to generate composition. Please try again.');
+                return;
+            }
+            
             this.compositionDuration = settings.length;
             
             // Enable controls
