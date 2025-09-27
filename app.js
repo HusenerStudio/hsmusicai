@@ -12,6 +12,9 @@ class AIComposer {
         this.playStartTime = 0;
         this.compositionDuration = 0;
         
+        // Storage for generated music
+        this.generatedMusic = new Map(); // Store generated compositions with their audio data
+        
         this.initializeElements();
         this.bindEvents();
         this.startVisualization();
@@ -33,6 +36,15 @@ class AIComposer {
         this.stopBtn = document.getElementById('stopBtn');
         this.downloadBtn = document.getElementById('exportBtn'); // This is the export button
         this.createMusicBtn = document.getElementById('createMusicBtn'); // New Suno AI-style button
+        
+        // New Suno-style elements
+        this.mainPromptInput = document.getElementById('mainPromptInput');
+        this.styleCards = document.querySelectorAll('.style-card');
+        this.toggleAdvanced = document.getElementById('toggleAdvanced');
+        this.advancedControls = document.getElementById('advancedControls');
+        
+        // Recent generations elements
+        this.generationsGrid = document.getElementById('generationsGrid');
         
         // Visualization elements
         this.visualizer = document.getElementById('visualizer');
@@ -78,6 +90,16 @@ class AIComposer {
         // New Create Music button event
         if (this.createMusicBtn) {
             this.createMusicBtn.addEventListener('click', () => this.handleCreateMusic());
+        }
+        
+        // Style cards events
+        this.styleCards.forEach(card => {
+            card.addEventListener('click', () => this.handleStyleCardClick(card));
+        });
+        
+        // Advanced controls toggle
+        if (this.toggleAdvanced) {
+            this.toggleAdvanced.addEventListener('click', () => this.toggleAdvancedControls());
         }
         
         // Style blending controls
@@ -1001,6 +1023,10 @@ class AIComposer {
             
             this.showSuccess(`Music generated from prompt: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"`);
             
+            // Add to recent generations
+            const timestamp = new Date().toLocaleTimeString();
+            const title = `Generation ${timestamp}`;
+            this.addToRecentGenerations(title, prompt, settings);
         } catch (error) {
             console.error('Error generating music from text prompt:', error);
             this.showError('Failed to generate music from text prompt. Please try again.');
@@ -1378,6 +1404,208 @@ class AIComposer {
                 this.createMusicBtn.classList.remove('loading');
                 this.createMusicBtn.disabled = false;
             }
+        }
+    }
+    
+    handleStyleCardClick(card) {
+        // Remove active class from all cards
+        this.styleCards.forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked card
+        card.classList.add('active');
+        
+        // Get the style from the card's data attribute or text
+        const style = card.querySelector('h4').textContent;
+        
+        // Update the main prompt input with the style
+        if (this.mainPromptInput) {
+            const currentPrompt = this.mainPromptInput.value.trim();
+            const stylePrompt = this.getStylePrompt(style);
+            
+            if (currentPrompt) {
+                this.mainPromptInput.value = `${currentPrompt}, ${stylePrompt}`;
+            } else {
+                this.mainPromptInput.value = stylePrompt;
+            }
+        }
+        
+        // Show notification
+        this.showNotification(`${style} style selected`, 'success');
+    }
+    
+    getStylePrompt(style) {
+        const stylePrompts = {
+            'Electronic': 'electronic music with synthesizers and digital beats',
+            'Rock': 'rock music with electric guitars and powerful drums',
+            'Jazz': 'smooth jazz with improvisation and complex harmonies',
+            'Classical': 'classical orchestral music with rich instrumentation',
+            'Hip Hop': 'hip hop with strong beats and rhythmic flow',
+            'Pop': 'catchy pop music with memorable melodies',
+            'Ambient': 'ambient atmospheric music with ethereal soundscapes',
+            'Folk': 'acoustic folk music with traditional instruments'
+        };
+        
+        return stylePrompts[style] || `${style.toLowerCase()} style music`;
+    }
+    
+    toggleAdvancedControls() {
+        if (this.advancedControls && this.toggleAdvanced) {
+            const isHidden = this.advancedControls.style.display === 'none' || 
+                           this.advancedControls.style.display === '';
+            
+            if (isHidden) {
+                this.advancedControls.style.display = 'block';
+                this.toggleAdvanced.classList.add('active');
+                this.toggleAdvanced.querySelector('.toggle-text').textContent = 'Hide Advanced Controls';
+            } else {
+                this.advancedControls.style.display = 'none';
+                this.toggleAdvanced.classList.remove('active');
+                this.toggleAdvanced.querySelector('.toggle-text').textContent = 'Show Advanced Controls';
+            }
+        }
+    }
+    
+    addToRecentGenerations(title, prompt, settings) {
+        if (!this.generationsGrid) return;
+        
+        // Store the current composition and settings for this generation
+        const generationId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        this.generatedMusic.set(generationId, {
+            title,
+            prompt,
+            settings,
+            composition: this.currentComposition,
+            duration: this.compositionDuration,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Remove placeholder if it exists
+        const placeholder = this.generationsGrid.querySelector('.generation-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+        
+        // Create generation item
+        const generationItem = document.createElement('div');
+        generationItem.className = 'generation-item';
+        generationItem.innerHTML = `
+            <div class="generation-title">${title}</div>
+            <div class="generation-details">${prompt.substring(0, 60)}${prompt.length > 60 ? '...' : ''}</div>
+            <div class="generation-actions">
+                <button class="generation-btn play-btn" onclick="app.playGeneration('${generationId}')">
+                    <i class="fas fa-play"></i> Play
+                </button>
+                <button class="generation-btn download-btn" onclick="app.downloadGeneration('${generationId}')">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        `;
+        
+        // Add to beginning of grid
+        this.generationsGrid.insertBefore(generationItem, this.generationsGrid.firstChild);
+        
+        // Keep only last 6 generations
+        const items = this.generationsGrid.querySelectorAll('.generation-item');
+        if (items.length > 6) {
+            const removedItem = items[items.length - 1];
+            // Clean up stored data for removed item
+            const removedButtons = removedItem.querySelectorAll('button[onclick*="playGeneration"], button[onclick*="downloadGeneration"]');
+            removedButtons.forEach(btn => {
+                const onclick = btn.getAttribute('onclick');
+                const match = onclick.match(/'([^']+)'/);
+                if (match) {
+                    this.generatedMusic.delete(match[1]);
+                }
+            });
+            removedItem.remove();
+        }
+    }
+    
+    async playGeneration(generationId) {
+        const generationData = this.generatedMusic.get(generationId);
+        if (!generationData) {
+            this.showError('Generation not found. It may have been removed.');
+            return;
+        }
+        
+        try {
+            // Stop current music if playing
+            if (this.isPlaying) {
+                this.stopMusic();
+            }
+            
+            // Initialize audio if not already done
+            if (!this.isInitialized) {
+                await this.initializeAudio();
+            }
+            
+            if (!this.isInitialized) {
+                this.showError('Failed to initialize audio system.');
+                return;
+            }
+            
+            // Set the stored composition as current
+            this.currentComposition = generationData.composition;
+            this.compositionDuration = generationData.duration;
+            
+            // Update UI to show which generation is playing
+            this.showNotification(`Playing: ${generationData.title}`, 'info');
+            
+            // Play the stored composition
+            await this.playMusic();
+            
+        } catch (error) {
+            console.error('Error playing generation:', error);
+            this.showError('Failed to play the selected generation.');
+        }
+    }
+    
+    async downloadGeneration(generationId) {
+        const generationData = this.generatedMusic.get(generationId);
+        if (!generationData) {
+            this.showError('Generation not found. It may have been removed.');
+            return;
+        }
+        
+        try {
+            // Initialize audio if not already done
+            if (!this.isInitialized) {
+                await this.initializeAudio();
+            }
+            
+            if (!this.isInitialized) {
+                this.showError('Failed to initialize audio system.');
+                return;
+            }
+            
+            // Show loading state
+            this.showNotification(`Preparing download: ${generationData.title}`, 'info');
+            
+            // Convert instruments object to array of enabled instruments
+            const enabledInstruments = Object.keys(generationData.settings.instruments).filter(
+                instrument => generationData.settings.instruments[instrument]
+            );
+            
+            // Export the stored composition to WAV
+            const exportedData = await this.musicGenerator.exportToWAV(
+                generationData.composition, 
+                enabledInstruments, 
+                generationData.duration,
+                24 // 24-bit high quality
+            );
+            
+            // Create filename with generation title and timestamp
+            const timestamp = new Date(generationData.timestamp).toISOString().slice(0, 19).replace(/:/g, '-');
+            const filename = `${generationData.title.replace(/[^a-zA-Z0-9]/g, '_')}_${timestamp}.wav`;
+            
+            // Download the file
+            this.downloadBlob(exportedData, filename, 'audio/wav');
+            
+            this.showNotification(`Downloaded: ${generationData.title}`, 'success');
+            
+        } catch (error) {
+            console.error('Error downloading generation:', error);
+            this.showError('Failed to download the selected generation.');
         }
     }
 }

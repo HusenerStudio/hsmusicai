@@ -23,132 +23,172 @@
         </div>
     </nav>
 
-    <div class="container">
-        <h1 class="logo">🎵 HS Music AI</h1>
-        
-        <div class="mixing-console">
-            <div class="main-controls">
-                <div class="controls">
-                    <!-- New AI Input Section -->
-                    <div class="control-group ai-input-section">
-                        <h3>🤖 AI Input</h3>
-                        
-                        <div class="input-method-tabs">
-                            <button type="button" class="tab-button active" data-tab="text">📝 Text Prompt</button>
-                            <button type="button" class="tab-button" data-tab="audio">🎵 Audio Input</button>
-                        </div>
-                        
-                        <div class="tab-content" id="text-tab">
-                            <label for="textPrompt">Describe your music:</label>
-                            <textarea id="textPrompt" placeholder="e.g., 'Create a relaxing piano piece with gentle strings', 'Upbeat rock song with guitar solos', 'Ambient electronic soundscape'..." rows="3"></textarea>
-                            
-                            <div class="prompt-suggestions">
-                                <button type="button" class="suggestion-btn" data-prompt="Create a peaceful piano ballad with soft strings">🎹 Piano Ballad</button>
-                                <button type="button" class="suggestion-btn" data-prompt="Generate an upbeat electronic dance track">🎛️ EDM Track</button>
-                                <button type="button" class="suggestion-btn" data-prompt="Compose a cinematic orchestral piece">🎬 Orchestral</button>
-                            </div>
+    <div class="suno-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="hero-title">🎵 HS Music AI</h1>
+            <p class="hero-subtitle">Create amazing music with AI. Describe what you want and we'll generate it for you.</p>
+        </div>
 
-                            <!-- Suno AI Style Create Button -->
-                            <div class="create-music-section">
-                                <button id="createMusicBtn" class="create-music-btn">
-                                    <span class="btn-icon">🎵</span>
-                                    <span class="btn-text">Create Music</span>
-                                    <span class="btn-subtitle">Generate your AI composition</span>
-                                </button>
+        <!-- Main Prompt Section -->
+        <div class="main-prompt-section">
+            <div class="prompt-container">
+                <div class="input-method-tabs">
+                    <button type="button" class="tab-button active" data-tab="text">📝 Text Prompt</button>
+                    <button type="button" class="tab-button" data-tab="audio">🎵 Audio Input</button>
+                </div>
+                
+                <div class="tab-content" id="text-tab">
+                    <div class="prompt-input-wrapper">
+                        <textarea id="aiPromptInput" class="main-prompt-input" placeholder="Describe the music you want to create... e.g., 'A relaxing piano piece with gentle strings' or 'Upbeat electronic dance track with heavy bass'"></textarea>
+                        <button id="createMusicBtn" class="create-music-btn">
+                            <span class="btn-icon">🎵</span>
+                            <span class="btn-text">Create Music</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-content hidden" id="audio-tab">
+                    <div class="audio-upload-section">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.ogg">
+                            <div class="file-input-display">
+                                <span class="file-icon">🎵</span>
+                                <span class="file-text">Choose audio file or drag & drop</span>
                             </div>
                         </div>
                         
-                        <div class="tab-content hidden" id="audio-tab">
-                            <label for="audioInput">Upload audio file:</label>
-                            <div class="file-input-wrapper">
-                                <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.ogg">
-                                <div class="file-input-display">
-                                    <span class="file-icon">🎵</span>
-                                    <span class="file-text">Choose audio file or drag & drop</span>
-                                </div>
-                            </div>
-                            
-                            <div class="extension-options">
-                                <label>Extension Mode:</label>
-                                <div class="radio-group">
-                                    <label class="radio-option">
-                                        <input type="radio" name="extensionMode" value="extend-end" checked>
-                                        <span>🔚 Extend at End</span>
-                                    </label>
-                                    <label class="radio-option">
-                                        <input type="radio" name="extensionMode" value="extend-start">
-                                        <span>🔜 Extend at Start</span>
-                                    </label>
-                                    <label class="radio-option">
-                                        <input type="radio" name="extensionMode" value="analyze-style">
-                                        <span>🎨 Analyze & Generate Similar</span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="extension-length">
-                                <label for="extensionDuration">Extension Length:</label>
-                                <input type="range" id="extensionDuration" min="10" max="120" value="30">
-                                <span id="extensionDurationValue">30s</span>
+                        <div class="extension-options">
+                            <label>Extension Mode:</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="extensionMode" value="extend-end" checked>
+                                    <span>🔚 Extend at End</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="extensionMode" value="extend-start">
+                                    <span>🔜 Extend at Start</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="extensionMode" value="analyze-style">
+                                    <span>🎨 Analyze & Generate Similar</span>
+                                </label>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Quick Style Cards -->
+        <div class="style-cards-section">
+            <h3>Quick Styles</h3>
+            <div class="style-cards-grid">
+                <div class="style-card" data-style="pop">
+                    <div class="card-icon">🎤</div>
+                    <h4>Pop</h4>
+                    <p>Catchy melodies and modern production</p>
+                </div>
+                <div class="style-card" data-style="rock">
+                    <div class="card-icon">🎸</div>
+                    <h4>Rock</h4>
+                    <p>Powerful guitars and driving rhythms</p>
+                </div>
+                <div class="style-card" data-style="electronic">
+                    <div class="card-icon">🎛️</div>
+                    <h4>Electronic</h4>
+                    <p>Synthesized sounds and digital beats</p>
+                </div>
+                <div class="style-card" data-style="classical">
+                    <div class="card-icon">🎼</div>
+                    <h4>Classical</h4>
+                    <p>Orchestral arrangements and timeless beauty</p>
+                </div>
+                <div class="style-card" data-style="jazz">
+                    <div class="card-icon">🎺</div>
+                    <h4>Jazz</h4>
+                    <p>Smooth improvisation and complex harmonies</p>
+                </div>
+                <div class="style-card" data-style="ambient">
+                    <div class="card-icon">🌙</div>
+                    <h4>Ambient</h4>
+                    <p>Atmospheric soundscapes and textures</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Music Player Section -->
+        <div class="player-section" id="playerSection" style="display: none;">
+            <div class="player-container">
+                <div class="player-info">
+                    <h4 id="currentTrackTitle">Generated Track</h4>
+                    <p id="currentTrackDescription">AI-generated music</p>
+                </div>
+                <div class="player-controls">
+                    <button id="playBtn" class="player-btn">▶️</button>
+                    <button id="stopBtn" class="player-btn">⏹️</button>
+                    <button id="exportBtn" class="player-btn">💾</button>
+                </div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualizer -->
+        <div class="visualizer-section">
+            <canvas id="visualizer" width="800" height="200"></canvas>
+        </div>
+
+        <!-- Recent Generations Section -->
+        <div class="recent-generations">
+            <h3>Recent Generations</h3>
+            <div class="generations-grid" id="generationsGrid">
+                <!-- Recent generations will be populated here -->
+                <div class="generation-placeholder">
+                    <div class="generation-icon">🎵</div>
+                    <p>Your generated music will appear here</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Controls (Collapsible) -->
+        <div class="advanced-controls-section">
+            <button class="toggle-advanced" id="toggleAdvanced">
+                <span>⚙️ Advanced Settings</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            
+            <div class="advanced-controls" id="advancedControls" style="display: none;">
+                <div class="controls-grid">
                     <div class="control-group">
-                        <h3>🎼 Composition</h3>
+                        <h4>🎼 Composition</h4>
                         <label for="key">Key:</label>
                         <select id="key">
                             <option value="C">C Major</option>
                             <option value="G">G Major</option>
                             <option value="D">D Major</option>
                             <option value="A">A Major</option>
-                            <option value="E">E Major</option>
-                            <option value="B">B Major</option>
-                            <option value="F#">F# Major</option>
-                            <option value="Db">Db Major</option>
-                            <option value="Ab">Ab Major</option>
-                            <option value="Eb">Eb Major</option>
-                            <option value="Bb">Bb Major</option>
-                            <option value="F">F Major</option>
                             <option value="Am">A Minor</option>
                             <option value="Em">E Minor</option>
-                            <option value="Bm">B Minor</option>
-                            <option value="F#m">F# Minor</option>
-                            <option value="C#m">C# Minor</option>
-                            <option value="G#m">G# Minor</option>
-                            <option value="D#m">D# Minor</option>
-                            <option value="Bbm">Bb Minor</option>
-                            <option value="Fm">F Minor</option>
-                            <option value="Cm">C Minor</option>
-                            <option value="Gm">G Minor</option>
                             <option value="Dm">D Minor</option>
                         </select>
                         
-                        <label for="tempo">Tempo (BPM):</label>
+                        <label for="tempo">Tempo:</label>
                         <input type="range" id="tempo" min="60" max="200" value="120">
-                        <span id="tempoValue">120</span>
+                        <span id="tempoValue">120 BPM</span>
                         
                         <label for="complexity">Complexity:</label>
                         <select id="complexity">
                             <option value="simple">Simple</option>
                             <option value="moderate">Moderate</option>
                             <option value="complex">Complex</option>
-                            <option value="jazz">Jazz</option>
-                            <option value="classical">Classical</option>
                         </select>
                     </div>
 
                     <div class="control-group">
-                        <h3>🎸 Arrangement</h3>
-                        <label for="structure">Song Structure:</label>
-                        <select id="structure">
-                            <option value="simple">Verse-Chorus</option>
-                            <option value="extended">Intro-Verse-Chorus-Bridge</option>
-                            <option value="complex">Full Song Structure</option>
-                            <option value="instrumental">Instrumental</option>
-                        </select>
-                        
-                        <label for="genre">Primary Genre:</label>
+                        <h4>🎸 Style</h4>
+                        <label for="genre">Genre:</label>
                         <select id="genre">
                             <option value="pop">Pop</option>
                             <option value="rock">Rock</option>
@@ -156,146 +196,53 @@
                             <option value="classical">Classical</option>
                             <option value="electronic">Electronic</option>
                             <option value="ambient">Ambient</option>
-                            <option value="cinematic">Cinematic</option>
                         </select>
                         
-                        <div class="style-blend-section">
-                            <label for="secondaryGenre">Secondary Genre (Style Blend):</label>
-                            <select id="secondaryGenre">
-                                <option value="">None</option>
-                                <option value="pop">Pop</option>
-                                <option value="rock">Rock</option>
-                                <option value="jazz">Jazz</option>
-                                <option value="classical">Classical</option>
-                                <option value="electronic">Electronic</option>
-                                <option value="ambient">Ambient</option>
-                                <option value="cinematic">Cinematic</option>
-                            </select>
-                            
-                            <label for="blendRatio">Blend Ratio:</label>
-                            <input type="range" id="blendRatio" min="0" max="100" value="30" disabled>
-                            <span id="blendRatioValue">30%</span>
-                        </div>
+                        <label for="structure">Structure:</label>
+                        <select id="structure">
+                            <option value="simple">Verse-Chorus</option>
+                            <option value="extended">Full Song</option>
+                            <option value="instrumental">Instrumental</option>
+                        </select>
                         
-                        <label for="energy">Energy Level:</label>
+                        <label for="energy">Energy:</label>
                         <input type="range" id="energy" min="1" max="10" value="5">
                         <span id="energyValue">5</span>
                     </div>
 
                     <div class="control-group">
-                        <h3>🎹 Instruments</h3>
-                        <label for="instruments">Lead Instrument:</label>
+                        <h4>🎹 Instruments</h4>
+                        <label for="instruments">Lead:</label>
                         <select id="instruments">
-                            <option value="piano">Advanced Piano</option>
-                            <option value="strings">Orchestral Strings</option>
-                            <option value="synth">FM Synthesizer</option>
-                            <option value="guitar">Electric Guitar</option>
-                            <option value="brass">Brass Section</option>
+                            <option value="piano">Piano</option>
+                            <option value="strings">Strings</option>
+                            <option value="synth">Synthesizer</option>
+                            <option value="guitar">Guitar</option>
                         </select>
                         
-                        <label for="layers">Arrangement Layers:</label>
+                        <label for="layers">Layers:</label>
                         <input type="range" id="layers" min="2" max="8" value="4">
                         <span id="layersValue">4</span>
                         
                         <label for="dynamics">Dynamics:</label>
                         <select id="dynamics">
-                            <option value="soft">Soft (pp)</option>
-                            <option value="medium">Medium (mf)</option>
-                            <option value="loud">Loud (ff)</option>
-                            <option value="dynamic">Dynamic Range</option>
+                            <option value="soft">Soft</option>
+                            <option value="medium">Medium</option>
+                            <option value="loud">Loud</option>
+                            <option value="dynamic">Dynamic</option>
                         </select>
                     </div>
-
-                    <div class="control-group">
-                        <h3>🎚️ Mix & Master</h3>
-                        <label for="reverb">Reverb:</label>
-                        <input type="range" id="reverb" min="0" max="100" value="30">
-                        <span id="reverbValue">30%</span>
-                        
-                        <label for="delay">Delay:</label>
-                        <input type="range" id="delay" min="0" max="100" value="20">
-                        <span id="delayValue">20%</span>
-                        
-                        <label for="chorus">Chorus:</label>
-                        <input type="range" id="chorus" min="0" max="100" value="15">
-                        <span id="chorusValue">15%</span>
-                        
-                        <label for="compression">Compression:</label>
-                        <input type="range" id="compression" min="0" max="100" value="40">
-                        <span id="compressionValue">40%</span>
-                    </div>
                 </div>
-
-                <div class="buttons">
-                    <button id="generateBtn" class="primary">🎼 Generate Composition</button>
-                    <button id="playBtn" class="secondary">▶️ Play</button>
-                    <button id="stopBtn" class="danger">⏹️ Stop</button>
-                    
-                    <div class="export-dropdown">
-                        <button id="exportBtn" class="secondary">💾 Export</button>
-                        <div class="export-options">
-                            <button onclick="app.downloadMusic('wav')" class="export-option">📄 24-bit WAV</button>
-                            <button onclick="app.downloadMusic('midi')" class="export-option">🎹 MIDI File</button>
-                            <button onclick="app.downloadMusic('stems')" class="export-option">🎛️ Individual Stems</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="status" id="status">Ready to generate music</div>
                 
-                <div class="progress-bar" id="progressBar" style="display: none;">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-            </div>
-
-            <div class="master-section">
-                <div class="master-controls">
-                    <div class="master-fader">
-                        <h3>Master Volume</h3>
-                        <div class="fader-container">
-                            <input type="range" id="masterVolume" class="fader-vertical" min="0" max="100" value="70" orient="vertical">
-                            <span id="masterVolumeValue">70%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="effects-rack">
-                        <div class="effect-unit">
-                            <h4>Compressor</h4>
-                            <input type="range" id="compThreshold" min="-40" max="0" value="-12">
-                            <label>Threshold</label>
-                        </div>
-                        <div class="effect-unit">
-                            <h4>EQ High</h4>
-                            <input type="range" id="eqHigh" min="-12" max="12" value="0">
-                            <label>+/- 12dB</label>
-                        </div>
-                        <div class="effect-unit">
-                            <h4>EQ Low</h4>
-                            <input type="range" id="eqLow" min="-12" max="12" value="0">
-                            <label>+/- 12dB</label>
-                        </div>
-                        <div class="effect-unit">
-                            <h4>Stereo Width</h4>
-                            <input type="range" id="stereoWidth" min="0" max="200" value="100">
-                            <label>Width %</label>
-                        </div>
-                    </div>
+                <div class="generate-section">
+                    <button id="generateBtn" class="generate-btn">🎼 Generate with Settings</button>
                 </div>
             </div>
         </div>
 
-        <div class="visualizer">
-            <canvas id="visualizer" width="800" height="250"></canvas>
-        </div>
-
-        <div class="ai-features" style="margin-top: 30px;">
-            <div class="control-group">
-                <h3>🤖 AI Features</h3>
-                <button id="aiAnalyze" class="secondary">🔍 Analyze Harmony</button>
-                <button id="aiImprove" class="primary">✨ AI Enhancement</button>
-                <button id="aiVariation" class="secondary">🔄 Generate Variation</button>
-                <button id="aiMastering" class="primary">🎛️ AI Mastering</button>
-            </div>
+        <!-- Status Display -->
+        <div class="status-section">
+            <div class="status" id="status">Ready to create music</div>
         </div>
     </div>
 
